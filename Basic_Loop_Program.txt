@@ -1,0 +1,52 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_SECOND_PROGRAM
+*&---------------------------------------------------------------------*
+*& Basic Loop Program 
+*&---------------------------------------------------------------------*
+REPORT ZGC_SECOND_PROGRAM.
+
+data: n1 TYPE i ,
+      n2 TYPE i,
+      sum TYPE i.
+n1 = 10.
+n2 = 20.
+sum = n1 + n2.
+WRITE sum.
+*----------------------------------------------------------------------------------------
+* printing the value 1 to 10
+
+DATA x TYPE I VALUE 0.
+DO 10 TIMES.
+    WRITE / SY-INDEX.
+ENDDO.
+
+*----------------------------------------------------------------------------------------
+* printing the values 1 to 10 by using while loop
+
+WHILE X LT 11.
+     WRITE / X .
+     X = X + 1.
+ENDWHILE.
+*-----------------------------------------------------------------------------------------
+* Print only even numbers from 1 to 10 using CONTINUE.
+
+DATA y TYPE I VALUE 1.
+WHILE y < 11.
+     y = y + 1.
+     IF y MOD 2 <> 0.
+        CONTINUE.
+     ENDIF.
+     WRITE / y.
+ENDWHILE.
+*-----------------------------------------------------------------------------------------
+
+DATA: it_names TYPE TABLE OF string,
+      lv_name  TYPE string.
+
+APPEND 'Ravi' TO it_names.
+APPEND 'Anil' TO it_names.
+
+LOOP AT it_names INTO lv_name.
+  WRITE lv_name.
+ENDLOOP.
+*------------------------------------------------------------------------------------------

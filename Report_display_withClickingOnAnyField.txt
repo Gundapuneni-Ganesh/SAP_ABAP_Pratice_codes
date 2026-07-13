@@ -1,0 +1,98 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_SIXTEETH_PROGRAM
+*&---------------------------------------------------------------------*
+*& Report_display_withClickingOnAnyField
+*&---------------------------------------------------------------------*
+REPORT zgc_sixteeth_program.
+
+DATA:lv_number TYPE c LENGTH 9,
+     lv_field  TYPE char30,
+     lv_value  TYPE zde_36_std_rnum.
+
+SELECTION-SCREEN: BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
+SELECT-OPTIONS:s_nums FOR lv_number.
+SELECTION-SCREEN: END OF BLOCK b1.
+
+TYPES: BEGIN OF st_dt1,
+         s_number       TYPE zde_36_std_rnum,
+         s_name         TYPE  zde_36_std_name,
+         s_branch       TYPE  zde_36_std_branch,
+         s_phone_number TYPE  zde_36_std_pnum,
+       END OF st_dt1,
+
+       BEGIN OF st_dt2,
+         s_enroll_id   TYPE zde_36_std_enroll_id,
+         s_number      TYPE zde_36_std_rnum,
+         s_course_id   TYPE zde_36_std_course_id,
+         s_enroll_date TYPE zde_36_std_enroll_date,
+       END OF st_dt2,
+
+       BEGIN OF st_dt3,
+         s_course_id     TYPE zde_36_std_course_id,
+         s_course_name   TYPE zde_36_std_course_name,
+         s_department_id TYPE zde_36_std_dept_id,
+       END OF st_dt3.
+
+DATA: wa_dt1 TYPE st_dt1,
+      lt_dt1 TYPE TABLE OF st_dt1,
+      wa_dt2 TYPE st_dt2,
+      lt_dt2 TYPE TABLE OF st_dt2,
+      wa_dt3 TYPE st_dt3,
+      lt_dt3 TYPE TABLE OF st_dt3.
+
+SELECT s_number s_name s_branch s_phone_number
+FROM zdt_36_std_table INTO TABLE lt_dt1 WHERE s_number IN s_nums.
+
+IF sy-subrc EQ 0.
+  LOOP AT lt_dt1 INTO wa_dt1.
+    WRITE: / wa_dt1-s_number,wa_dt1-s_name,wa_dt1-s_branch,wa_dt1-s_phone_number.
+* HIDE:  wa_dt1-s_number,wa_dt1-s_name,wa_dt1-s_branch,wa_dt1-s_phone_number.
+" HIDE is used to identify which row the user selected  . Here user has optional to write the all fields . but common field is mandatory in both tables.
+
+  ENDLOOP.
+ELSE.
+  MESSAGE: 'the data was not fetched and no data found' TYPE 'E'.
+ENDIF.
+*------------------------------------------------------------- AT LINE SELECTION ---------------------------------------------------
+
+AT LINE-SELECTION.  "  When user double clicks on the line or select a line and press F2, at that time AT LINE-SELECTION event will trigger.
+
+*CLEAR: lv_field, lv_value.
+GET CURSOR FIELD lv_field VALUE lv_value.
+
+IF sy-lsind = 1.
+
+  IF lv_field EQ 'WA_DT1-S_NUMBER'.
+
+    SELECT s_enroll_id s_number s_course_id s_enroll_date FROM
+    zdt_36_std_enrol INTO TABLE lt_dt2 WHERE s_number EQ lv_value .
+      CLEAR : lv_field,lv_value.
+
+    IF sy-subrc EQ 0.
+      LOOP AT lt_dt2 INTO wa_dt2.
+        WRITE: / wa_dt2-s_enroll_id,wa_dt2-s_number,wa_dt2-s_course_id.
+
+     ENDLOOP.
+     ELSE.
+      MESSAGE: 'the data was not fetched and no data found from internal table' TYPE 'E'.
+    ENDIF.
+  ENDIF.
+
+elseif sy-lsind = 2.
+*------------------------------------------------------
+  IF lv_field EQ 'WA_DT2-S_COURSE_ID'.
+
+    SELECT s_course_id s_course_name s_department_id FROM zdt_36_std_corse INTO TABLE lt_dt3 WHERE s_course_id EQ lv_value .
+
+    IF sy-subrc EQ 0.
+      LOOP AT lt_dt3 INTO wa_dt3.
+        WRITE: / wa_dt2-s_course_id,wa_dt3-s_course_name,wa_dt3-s_department_id.
+
+      ENDLOOP.
+    ELSE.
+      MESSAGE: 'the data was not fetched and no data found from internal table' TYPE 'E'.
+    ENDIF.
+  ELSE.
+    MESSAGE:'the selcted roe field was not found in 3 table ' TYPE 'I'.
+  ENDIF.
+  endif.

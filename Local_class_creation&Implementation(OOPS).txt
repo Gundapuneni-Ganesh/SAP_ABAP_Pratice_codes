@@ -1,0 +1,124 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_THIRTYNINE_PROGRAM
+*&---------------------------------------------------------------------*
+*& Local_class_creation&Implementation(OOPS)
+*&---------------------------------------------------------------------*
+REPORT ZGC_THIRTYNINE_PROGRAM.
+
+*PARAMETER: LV_NUM TYPE ZDE_36_STD_RNUM,
+*          LV_ENROLL_ID TYPE ZDE_36_STD_ENROLL_ID.
+*-------------------------------------------------------------------------------------------------
+*CLASS FIRST_CLASS DEFINITION.                                      " FIRST WE SHOULD DECLARE THE CLASS DEFINITION BY USING KEYWORDS OF 'CLASS' AND 'DEFINITION'
+*  PUBLIC SECTION.                                                  " hERE WE SAY WHICH TYPE OF METHOD WE ARE DECLARING LIKE 'PUBLIC, PRIVATE,PROTECTED SECTION'
+*  METHODS DISPLAY1 IMPORTING FMV_NUM TYPE ZDE_36_STD_RNUM        "  THIS IS FOR THE 'INSTANCE METHOD' DEFINITION WITH 'METHODS' KEYWORD
+*                   EXPORTING FMV_NUMBER TYPE ZDE_36_STD_RNUM
+*                             FMV_NAME TYPE ZDE_36_STD_NAME
+*                             FMV_BRANCH TYPE ZDE_36_STD_BRANCH.
+*
+*  CLASS-METHODS DISPLAY2 IMPORTING FMV_ENROL TYPE ZDE_36_STD_ENROLL_ID   "  THIS IS FOR THE 'STATIC METHOD' DEFINITION WITH 'CLASS-METHODS' KEYWORD
+*                         EXPORTING FMV_NUMER TYPE ZDE_36_STD_RNUM
+*                                   FMV_ENROLL_ID TYPE ZDE_36_STD_ENROLL_ID
+*                                   FMV_COURSE_ID TYPE ZDE_36_STD_COURSE_ID.
+*  ENDCLASS.
+*
+*CLASS FIRST_CLASS IMPLEMENTATION.
+*  METHOD DISPLAY1.
+*    SELECT SINGLE S_NUMBER S_NAME  S_BRANCH FROM ZDT_36_STD_TABLE
+*      INTO (FMV_NUMBER, FMV_NAME ,FMV_BRANCH) WHERE S_NUMBER = LV_NUM.
+*    ENDMETHOD.
+*
+*    METHOD DISPLAY2.
+*      SELECT SINGLE S_ENROLL_ID S_NUMBER S_COURSE_ID FROM ZDT_36_STD_ENROL
+*        INTO (FMV_ENROLL_ID,FMV_NUMBER,FMV_COURSE_ID) WHERE S_ENROLL_ID = LV_ENROLL_ID.
+*      ENDMETHOD.
+*  ENDCLASS.
+*
+*START-OF-SELECTION.
+*
+*DATA F_OBJECT TYPE REF TO FIRST_CLASS.
+*CREATE OBJECT F_OBJECT.
+*F_OBJECT -> DISPLAY2( EXPORTING FMV_ENROLL_ID = LV_NUM
+*                      IMPORTING ).
+
+
+PARAMETERS: lv_num       TYPE zde_36_std_rnum,
+            lv_enrID TYPE zde_36_std_enroll_id.
+
+*---------------------------------------------------------------------*
+CLASS first_class DEFINITION.                                              " FIRST WE SHOULD DECLARE THE CLASS DEFINITION BY USING KEYWORDS OF 'CLASS' AND 'DEFINITION'
+  PUBLIC SECTION.                                                          " hERE WE SAY WHICH TYPE OF METHOD WE ARE DECLARING LIKE 'PUBLIC, PRIVATE,PROTECTED SECTION'
+
+    " Instance Method
+    METHODS display1                                                       "  THIS IS FOR THE 'INSTANCE METHOD' DEFINITION WITH 'METHODS' KEYWORD
+      IMPORTING  fmv_num    TYPE zde_36_std_rnum
+      EXPORTING  fmv_number TYPE zde_36_std_rnum
+                 fmv_name   TYPE zde_36_std_name
+                 fmv_branch TYPE zde_36_std_branch.
+
+    " Static Method
+    CLASS-METHODS display2                                                 "  THIS IS FOR THE 'STATIC METHOD' DEFINITION WITH 'CLASS-METHODS' KEYWORD
+      IMPORTING  fmv_enrol     TYPE zde_36_std_enroll_id
+      EXPORTING  fmv_number    TYPE zde_36_std_rnum
+                 fmv_enroll_id TYPE zde_36_std_enroll_id
+                 fmv_course_id TYPE zde_36_std_course_id.
+
+ENDCLASS.
+*---------------------------------------------------------------------*
+CLASS first_class IMPLEMENTATION.
+
+  METHOD display1.
+    SELECT SINGLE s_number s_name s_branch
+      INTO (fmv_number, fmv_name, fmv_branch)
+      FROM zdt_36_std_table
+      WHERE s_number = fmv_num.
+  ENDMETHOD.
+
+  METHOD display2.
+    SELECT SINGLE s_number s_enroll_id s_course_id
+      INTO (fmv_number, fmv_enroll_id, fmv_course_id)
+      FROM zdt_36_std_enrol
+      WHERE s_enroll_id = fmv_enrol.
+  ENDMETHOD.
+
+ENDCLASS.
+*---------------------------------------------------------------------*
+
+START-OF-SELECTION.
+
+DATA: f_object TYPE REF TO first_class,
+      lv_name   TYPE zde_36_std_name,
+      lv_branch TYPE zde_36_std_branch,
+      lv_course TYPE zde_36_std_course_id,
+      lv_number TYPE zde_36_std_rnum.
+
+CREATE OBJECT f_object.
+
+"---- Instance Method Call
+f_object->display1(
+  EXPORTING
+    fmv_num = lv_num
+  IMPORTING
+    fmv_number = lv_number
+    fmv_name   = lv_name
+    fmv_branch = lv_branch ).
+
+WRITE: / '--- Student Details ---',
+       / 'Number:', lv_number,
+       / 'Name  :', lv_name,
+       / 'Branch:', lv_branch.
+
+SKIP.
+
+"---- Static Method Call
+first_class=>display2(
+  EXPORTING
+    fmv_enrol = lv_enrID
+  IMPORTING
+    fmv_number    = lv_number
+    fmv_enroll_id = lv_enrid
+    fmv_course_id = lv_course ).
+
+WRITE: / '--- Enrollment Details ---',
+       / 'Student Number:', lv_number,
+       / 'Enroll ID     :', lv_enrid,
+       / 'Course ID     :', lv_course.

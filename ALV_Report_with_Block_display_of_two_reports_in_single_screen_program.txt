@@ -1,0 +1,87 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_TWENTYSIX_PROGRAM
+*&---------------------------------------------------------------------*
+*& ALV_Report_with_Block_display_of_two_reports_in_single_screen_program
+*&---------------------------------------------------------------------*
+REPORT ZGC_TWENTYSIX_PROGRAM.
+
+include ZGC_IP_THREE.    " Here we declare the all internal tables and field catlog names
+*--------------------------------------------------------------------------------------------------------
+data : lwa_layout1 type SLIS_LAYOUT_ALV,  " For first table
+      lt_events1 type SLIS_T_EVENT.
+
+
+data : lwa_layout2 type SLIS_LAYOUT_ALV,  " For second table
+      lt_events2 type SLIS_T_EVENT.
+*-------------------------------------------------------------------------------------------------------
+" For using ALV BLOCK We need to use 3 Function modules
+
+* 1) This is for insilisation , that This is progam should use it
+CALL FUNCTION 'REUSE_ALV_BLOCK_LIST_INIT'
+  EXPORTING
+    i_callback_program             = sy-repid  "This is mandatory to fill . here we should write using program name , i use system variable by default it take program name
+*   I_CALLBACK_PF_STATUS_SET       = ' '
+*   I_CALLBACK_USER_COMMAND        = ' '
+*   IT_EXCLUDING                   =
+          .
+
+* 2) This is for Appending the table By sequence way
+*   => 2.1) First table inserion
+CALL FUNCTION 'REUSE_ALV_BLOCK_LIST_APPEND'
+  EXPORTING
+    is_layout                        = lwa_layout1     " These are Mandatory fields . so we can go the function module . so import tab select the table type and define in the data
+    it_fieldcat                      = lt_fcat1        " here we should write the feildcatlog table . we define in the INCLUDE .
+    i_tabname                        = 'LT_STD1'       " Here we should write the internal table name and it should be in  captial letters (mandatory)
+    it_events                        = lt_events1      " These are Mandatory fields . so we can go the function module . so import tab select the table type and define in the data
+*   IT_SORT                          =
+*   I_TEXT                           = ' '
+  TABLES
+    t_outtab                         = lt_std1        " hERE WE SHOULD WRITE THE INTERNAL TABLE NAME . for data fetching and display
+ EXCEPTIONS
+   PROGRAM_ERROR                    = 1
+   MAXIMUM_OF_APPENDS_REACHED       = 2
+   OTHERS                           = 3
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+*   => 2.2) second table inserion
+CALL FUNCTION 'REUSE_ALV_BLOCK_LIST_APPEND'
+  EXPORTING
+    is_layout                        = lwa_layout2
+    it_fieldcat                      = lt_fcat2
+    i_tabname                        = 'LT_STD2'
+    it_events                        = lt_events2
+*   IT_SORT                          =
+*   I_TEXT                           = ' '
+  TABLES
+    t_outtab                         = lt_std2
+ EXCEPTIONS
+   PROGRAM_ERROR                    = 1
+   MAXIMUM_OF_APPENDS_REACHED       = 2
+   OTHERS                           = 3
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+* 3) This is for Display the tables In single screen
+CALL FUNCTION 'REUSE_ALV_BLOCK_LIST_DISPLAY'
+* EXPORTING
+*   I_INTERFACE_CHECK             = ' '
+*   IS_PRINT                      =
+*   I_SCREEN_START_COLUMN         = 0
+*   I_SCREEN_START_LINE           = 0
+*   I_SCREEN_END_COLUMN           = 0
+*   I_SCREEN_END_LINE             = 0
+* IMPORTING
+*   E_EXIT_CAUSED_BY_CALLER       =
+*   ES_EXIT_CAUSED_BY_USER        =
+ EXCEPTIONS
+   PROGRAM_ERROR                 = 1
+   OTHERS                        = 2
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.

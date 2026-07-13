@@ -1,0 +1,166 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_THIRTYSIX_PROGRAM
+*&---------------------------------------------------------------------*
+*& Calling_smartform_without_dialogPreviewBoxAppereance_program
+*&---------------------------------------------------------------------*
+REPORT ZGC_THIRTYSIX_PROGRAM.
+
+
+
+PARAMETERS: s_numb           TYPE zde_36_std_rnum OBLIGATORY,
+            s_name           TYPE zde_36_std_name,
+            s_branch         TYPE zde_36_std_branch,
+            s_phone          TYPE zde_36_std_branch,
+            s_enrl           TYPE zde_36_std_enroll_id.
+
+*--------------------------------------------------------------------------------------------------------------------------------------
+
+DATA sf_name2 TYPE rs38l_fnam. "This data element should copy from the export in function module of SSF_FUNCTION_MODULE_NAME
+
+*--------------------------------------------------------------------------------------------------------------------------------------
+
+DATA ls_oovar type SSFCOMPOP.
+ls_oovar-tddest = 'LP01'.
+
+DATA ls_cpvar type SSFCTRLOP.
+ls_cpvar-no_dialog = 'X'.
+ls_cpvar-preview = 'X'.
+ls_cpvar-getotf = 'X'.     " This is for enabling the conersion of standard Smartform to OTF format
+                            " so now no preview will appear . so it will direct convert in OTF Format
+
+Data ls_otff type SSFCRESCL.
+
+Data lt_lines_pdf type table of TLINE.
+*--------------------------------------------------------------------------------------------------------------------------------------
+
+CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME' " This is for not changing the function module name by moving the smartforms from dev to quality and production
+  EXPORTING
+    formname           = 'ZGC_SECOND_SFORM'  " Here we should give the SmartForm name
+*   VARIANT            = ' '
+*   DIRECT_CALL        = ' '
+  IMPORTING
+    fm_name            = sf_name2
+  EXCEPTIONS
+    no_form            = 1
+    no_function_module = 2
+    OTHERS             = 3.
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+
+CALL FUNCTION sf_name2
+  EXPORTING
+*   ARCHIVE_INDEX    =
+*   ARCHIVE_INDEX_TAB          =
+*   ARCHIVE_PARAMETERS         =
+   CONTROL_PARAMETERS         = ls_cpvar  " This is for the automate Dialog screen buttons through coding by passing the same data element of this CONTROL_PARAMETERS  to ls_cpvar. so that ls_cpvar options we can outomate the buttons options
+*   MAIL_APPL_OBJ    =
+*   MAIL_RECIPIENT   =
+*   MAIL_SENDER      =
+   OUTPUT_OPTIONS   = ls_oovar " This is for the automate Dialog screen Fields through coding . by passing the same data element of this OUTPUT_OPTIONS  to ls_OOvar. so that ls_oovar options we can outomate the field options
+   USER_SETTINGS    = ' '      " This is for changing the system settings . if we pass "X" . what ever we pass through coding it wont apply . if we pass space ,it applies . This is for changing the system default settings
+    s_num            = s_numb
+ IMPORTING
+*   DOCUMENT_OUTPUT_INFO       =
+   JOB_OUTPUT_INFO  =   ls_otff         " Here the OTF format will get stored
+*   JOB_OUTPUT_OPTIONS         =
+  EXCEPTIONS
+    formatting_error = 1
+    internal_error   = 2
+    send_error       = 3
+    user_canceled    = 4
+    OTHERS           = 5.
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+*--------------------------------------------------------------------------------------------------------------------
+CALL FUNCTION 'CONVERT_OTF'
+ EXPORTING
+   FORMAT                      = 'PDF'  " HERE WE should say which type of format we want like ASCII or PDF ...ETC
+*   MAX_LINEWIDTH               = 132
+*   ARCHIVE_INDEX               = ' '
+*   COPYNUMBER                  = 0
+*   ASCII_BIDI_VIS2LOG          = ' '
+*   PDF_DELETE_OTFTAB           = ' '
+*   PDF_USERNAME                = ' '
+*   PDF_PREVIEW                 = ' '
+*   USE_CASCADING               = ' '
+*   MODIFIED_PARAM_TABLE        =
+* IMPORTING
+*   BIN_FILESIZE                =
+*   BIN_FILE                    =
+  TABLES
+    otf                         = ls_otff-otfdata                         " Here we are accessing the OTF(Output Text Format) through otfdata column
+    lines                       = lt_lines_pdf                     "This is the data in lines of the pdf Format
+ EXCEPTIONS
+   ERR_MAX_LINEWIDTH           = 1
+   ERR_FORMAT                  = 2
+   ERR_CONV_NOT_POSSIBLE       = 3
+   ERR_BAD_OTF                 = 4
+   OTHERS                      = 5
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+
+CALL FUNCTION 'GUI_DOWNLOAD'
+  EXPORTING
+*   BIN_FILESIZE                    =
+    filename                        = 'C:\Users\aishu\OneDrive\Desktop\useprofile.pdf'
+   FILETYPE                        = 'BIN'
+*   APPEND                          = ' '
+*   WRITE_FIELD_SEPARATOR           = ' '
+*   HEADER                          = '00'
+*   TRUNC_TRAILING_BLANKS           = ' '
+*   WRITE_LF                        = 'X'
+*   COL_SELECT                      = ' '
+*   COL_SELECT_MASK                 = ' '
+*   DAT_MODE                        = ' '
+*   CONFIRM_OVERWRITE               = ' '
+*   NO_AUTH_CHECK                   = ' '
+*   CODEPAGE                        = ' '
+*   IGNORE_CERR                     = ABAP_TRUE
+*   REPLACEMENT                     = '#'
+*   WRITE_BOM                       = ' '
+*   TRUNC_TRAILING_BLANKS_EOL       = 'X'
+*   WK1_N_FORMAT                    = ' '
+*   WK1_N_SIZE                      = ' '
+*   WK1_T_FORMAT                    = ' '
+*   WK1_T_SIZE                      = ' '
+*   WRITE_LF_AFTER_LAST_LINE        = ABAP_TRUE
+*   SHOW_TRANSFER_STATUS            = ABAP_TRUE
+*   VIRUS_SCAN_PROFILE              = '/SCET/GUI_DOWNLOAD'
+* IMPORTING
+*   FILELENGTH                      =
+  tables
+    data_tab                        = lt_lines_pdf
+*   FIELDNAMES                      =
+ EXCEPTIONS
+   FILE_WRITE_ERROR                = 1
+   NO_BATCH                        = 2
+   GUI_REFUSE_FILETRANSFER         = 3
+   INVALID_TYPE                    = 4
+   NO_AUTHORITY                    = 5
+   UNKNOWN_ERROR                   = 6
+   HEADER_NOT_ALLOWED              = 7
+   SEPARATOR_NOT_ALLOWED           = 8
+   FILESIZE_NOT_ALLOWED            = 9
+   HEADER_TOO_LONG                 = 10
+   DP_ERROR_CREATE                 = 11
+   DP_ERROR_SEND                   = 12
+   DP_ERROR_WRITE                  = 13
+   UNKNOWN_DP_ERROR                = 14
+   ACCESS_DENIED                   = 15
+   DP_OUT_OF_MEMORY                = 16
+   DISK_FULL                       = 17
+   DP_TIMEOUT                      = 18
+   FILE_NOT_FOUND                  = 19
+   DATAPROVIDER_EXCEPTION          = 20
+   CONTROL_FLUSH_ERROR             = 21
+   OTHERS                          = 22
+          .
+IF sy-subrc <> 0.
+ "Implement suitable error handling here
+ENDIF.

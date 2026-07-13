@@ -1,0 +1,58 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_FIFTEENTH_PROGRAM
+*&---------------------------------------------------------------------*
+*& Report_display_without_ALV
+*&---------------------------------------------------------------------*
+REPORT zgc_fifteenth_program.
+
+DATA:lv_number TYPE c LENGTH 9.
+
+SELECTION-SCREEN: BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
+SELECT-OPTIONS:s_nums for lv_number.
+SELECTION-SCREEN: END OF BLOCK b1.
+
+TYPES: BEGIN OF st_dt1,
+         s_number       TYPE zde_36_std_rnum,
+         s_name         TYPE  zde_36_std_name,
+         s_branch       TYPE  zde_36_std_branch,
+         s_phone_number TYPE  zde_36_std_pnum,
+       END OF st_dt1,
+
+       BEGIN OF st_dt2,
+         s_enroll_id TYPE zde_36_std_enroll_id,
+         s_number    TYPE zde_36_std_rnum,
+         s_course_id TYPE zde_36_std_course_id,
+       END OF st_dt2.
+
+DATA: wa_dt1 TYPE st_dt1,
+      lt_dt1 TYPE TABLE OF st_dt1,
+      wa_dt2 TYPE st_dt2,
+      lt_dt2 TYPE TABLE OF st_dt2.
+
+SELECT s_number s_name s_branch s_phone_number FROM zdt_36_std_table INTO TABLE lt_dt1 WHERE s_number IN s_nums.
+
+IF sy-subrc EQ 0.
+  LOOP AT lt_dt1 INTO wa_dt1.
+    WRITE: / wa_dt1-s_number,wa_dt1-s_name,wa_dt1-s_branch,wa_dt1-s_phone_number.
+    HIDE:  wa_dt1-s_number,wa_dt1-s_name,wa_dt1-s_branch,wa_dt1-s_phone_number. " HIDE is used to identify which row the user selected  . Here user has optional to write the all fields . but common field is mandatory in both tables.
+
+  ENDLOOP.
+ELSE.
+  MESSAGE: 'the data was not fetched and no data found' TYPE 'E'.
+ENDIF.
+
+
+at line-selection.  "  When user double clicks on the line or select a line and press F2, at that time AT LINE-SELECTION event will trigger.
+
+
+
+select s_enroll_id s_number s_course_id from zdt_36_std_enrol into table lt_dt2 where s_number eq wa_dt1-s_number .
+
+IF sy-subrc EQ 0.
+  LOOP AT lt_dt2 INTO wa_dt2.
+    WRITE: / wa_dt2-s_enroll_id,wa_dt2-s_number,wa_dt2-s_course_id.
+
+  ENDLOOP.
+ELSE.
+  MESSAGE: 'the data was not fetched and no data found from internal table' TYPE 'E'.
+ENDIF.

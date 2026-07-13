@@ -1,0 +1,151 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_NEW_SQL_SYNTAXES
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zgc_new_sql_syntaxes.
+*
+*DATA: lv_vbeln TYPE vbeln_va.
+*SELECT-OPTIONS: s_vbeln FOR lv_vbeln.
+
+*SELECT vbeln,erdat,erzet,ernam,vbtyp,
+*  CASE vbtyp                              " here we are adding extra column with vbtyp condition
+*  WHEN 'c' THEN 'Internal order'
+*  ELSE 'External order'
+*  END AS description                      " for extra colunm we kept name by using "END AS Name"
+*  FROM vbak
+*  INTO TABLE @DATA(it_data)               " here we dont need to declare externally internal table and structure
+*  WHERE vbeln IN @s_vbeln.                " with help of @ symbol we declare the program variables in SQL quries
+*
+*LOOP AT it_data INTO DATA(wa_data).       " here with DATA() method we can declare inline only
+*  WRITE |{ wa_data-vbeln }{ wa_data-erdat }{ wa_data-erzet }{ wa_data-ernam }{ wa_data-description }|.
+*ENDLOOP.
+
+*--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+" we using literals in SQL query for true or false checking .{instead of sending that to the internal table and checking with if condition of sy-subrc =0 . we use literals}
+
+*at selection-screen.   " here we are checking at field level . did login user waas there in my table or no
+*
+*select single 'X' from table_name
+*  into @data(lv_exit)
+*  where table_variable = @sy-uname.
+*if sy-subrc = 0.
+*  message: ' sucessfully exited user ' type 'S'.
+* endif.
+*
+*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+" Using Aggregate functions SUM , COUNT , MAX , MIN , AVG .
+
+* SUM we are using . while using this we should specify the "GROUP BY" statement for beside column for what we are matching and doing  sum.
+" while using the Aggregation function , we need to specify all column names except we implement column in agrregate function .in the "GROUP BY " statement
+
+
+*data: lv_erdat type erdat.
+*select-options: s_erdat for lv_erdat.
+*
+*select erdat,sum( netwr ) as netwr   " Here we should definately we should specify "AS " keyword for alias.
+*  from vbak
+*  into table @data(lt_data)
+*  where erdat in @s_erdat
+*  group by erdat.     " This is column . so based on this column values , so all should get sum and return in that variable . so we declared this column in Group by statement
+*
+*loop at lt_data into data(wa_data).
+*  write: / wa_data-erdat , wa_data-netwr.
+*  endloop.
+*
+*--------------------------------------------------------------------
+
+" Having clause . Having will use after the GROUP BY statement , if we want to filter then we use having clause . before that we use the where clause
+
+* Here we are specify condition after the getting result . then we want to filter based on the condition . so here we use the Having clause
+
+*data: lv_erdat type erdat.
+*select-options: s_erdat for lv_erdat.
+*parameters: lv_money type netwr_ak obligatory.
+*
+*select erdat,sum( netwr ) as netwr   " Here we should definately we should specify "AS " keyword for alias.
+*  from vbak
+*  into table @data(lt_data)
+*  where erdat in @s_erdat
+*  group by erdat
+*  having sum( netwr ) > @lv_money. " This is column . so based on this column values , so all should get sum and return in that variable . so we declared this column in Group by statement
+*
+*
+*loop at lt_data into data(wa_data).
+*  write: / wa_data-erdat , wa_data-netwr.
+*  endloop.
+
+*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+" ----------------------------------------------------------------------
+" COMPLETE MODERN Open SQL Example (All Features)
+" ----------------------------------------------------------------------
+
+DATA(lv_min_price) = 300.
+DATA(lv_year) = '2024'.
+
+SELECT
+    " 1. Regular columns
+    carrid,
+    connid,
+    fldate,
+    price,
+
+    " 2. Literals
+    'TICKET' AS document_type,
+    1 AS version,
+
+    " 3. Host variables (@ prefix)
+    @lv_year AS report_year,
+    @sy-uname AS created_by,
+
+    " 4. Arithmetic expressions
+    price * 1.19 AS price_with_vat,
+    price DIV 100 AS hundred_blocks,
+    price MOD 10 AS last_digit,
+    ROUND( price * 0.85, 2 ) AS discounted,
+
+    " 5. CASE expression
+    CASE
+        WHEN price > 800 THEN 'Premium'
+        WHEN price > 500 THEN 'Standard'
+        WHEN price > 0   THEN 'Budget'
+        ELSE 'Error'
+    END AS class,
+
+    " 6. LET for complex calculations
+    LET
+        vat = price * 0.19,
+        fee = CASE
+                  WHEN carrid = 'LH' THEN 50
+                  ELSE 25
+              END,
+        total = price + vat + fee,
+        tax_rate = ( vat / total ) * 100
+    IN
+        vat AS vat_amount,
+        fee AS service_fee,
+        total AS total_price,
+        tax_rate AS vat_percentage,
+
+    " 7. Aggregate with window function
+    AVG( price ) OVER( PARTITION BY carrid ) AS carrier_avg_price
+
+FROM sflight
+WHERE
+    price > @lv_min_price
+    AND fldate BETWEEN @lv_year && '0101' AND @lv_year && '1231'
+
+INTO TABLE @DATA(lt_complete).
+
+" Display results
+LOOP AT lt_complete INTO DATA(ls_result).
+  WRITE: / |Flight: { ls_result-carrid } { ls_result-connid }|,
+         / |  Price: { ls_result-price }, Class: { ls_result-class }|,
+         / |  Total with tax & fee: { ls_result-total_price }|,
+         / |  VAT: { ls_result-vat_percentage }%|,
+         / |  Carrier avg price: { ls_result-carrier_avg_price }|,
+         / |  -------------------|.
+ENDLOOP.

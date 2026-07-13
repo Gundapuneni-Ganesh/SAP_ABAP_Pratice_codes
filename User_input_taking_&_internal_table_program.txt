@@ -1,0 +1,100 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_FIFTH_PROGRAM
+*&---------------------------------------------------------------------*
+*& User_input_taking_&_internal_table_programs
+*&---------------------------------------------------------------------*
+REPORT ZGC_FIFTH_PROGRAM.
+* internal table programs for single field
+
+DATA:lt_emp_names TYPE TABLE OF STRING ,
+     emp_name TYPE string.
+APPEND 'ganesh' to lt_emp_names.
+APPEND 'chaitnaya' to  lt_emp_names.
+APPEND 'meena' to lt_emp_names.
+
+
+LOOP AT lt_emp_names INTO emp_name.
+    WRITE / emp_name.
+ENDLOOP.
+
+*-------------------------------------------------------------------------
+* Multiple Fields → TABLE OF structure
+
+TYPES: BEGIN OF ty_student,
+         id   TYPE i,
+         name TYPE string,
+         marks TYPE p DECIMALS 2,
+       END OF ty_student.
+
+DATA lt_students TYPE TABLE OF ty_student.
+
+APPEND VALUE ty_student(
+  id = 1
+  name = 'Ravi'
+  marks = '85.50'
+) TO lt_students.
+
+APPEND VALUE ty_student(
+  id = 2
+  name = 'Sita'
+  marks = '90.00'
+) TO lt_students.
+
+LOOP AT lt_students INTO DATA(ls_student).
+  WRITE: / ls_student-id, ls_student-name, ls_student-marks.
+ENDLOOP.
+*---------------------------------------------------------------------------------------------------------------------------------
+* user input taking examples
+"Parameters are used to take input from the user. It is just like input fields.
+*PARAMETERS: customerid TYPE P LENGTH 10 , company_code TYPE I, customer_name TYPE STRING ,customer_password TYPE STRING.
+" the above we gets error because the ariable name length should not be more than 8 characters .
+PARAMETERS: cust_id   TYPE i,
+            comp_cd   TYPE i,
+            cust_nm   TYPE string,
+            cust_pwd  TYPE string.
+
+PARAMETERS: p_matnr TYPE matnr OBLIGATORY,  " User MUST enter material number
+            p_werks TYPE werks_d.          " This is optional
+
+*--------------------------------------------------------------
+PARAMETERS: p_comp TYPE bukrs OBLIGATORY,      " Company code
+            p_year TYPE gjahr OBLIGATORY,      " Fiscal year
+            p_peri TYPE perio,                 " Period (optional)
+            p_curr TYPE waers DEFAULT 'USD'.   " Currency with default
+
+*-----------------------------------------------------------------
+
+PARAMETERS: p_file TYPE localfile
+            OBLIGATORY
+            LOWER CASE
+            MATCHCODE OBJECT file_mco.
+*------------------------------------------------------------------
+PARAMETERS: p_frdate TYPE datum OBLIGATORY DEFAULT sy-datum,
+            p_todate TYPE datum OBLIGATORY DEFAULT sy-datum,
+            p_vari   TYPE slis_vari.
+*-----------------------------------------------------------------
+
+PARAMETERS p_dummy TYPE i.
+SELECT-OPTIONS s_emp FOR p_dummy.
+
+
+*-----------------------------------------------------------------------------------------------------------------------------------
+
+*----------------------------------------------------------------------------------------
+" system variables outputs
+
+write:
+ /'SY-ABCDE',SY-ABCDE,
+ /'SY-DATUM',SY-DATUM,
+ /'SY-DBSYS',SY-DBSYS,
+ /'SY-HOST',SY-HOST,
+ /'SY-LANGU',SY-LANGU,
+ /'SY-MANDT',SY-MANDT,
+ /'SY-OPSYS',SY-OPSYS,
+ /'SY-SAPRL',SY-SAPRL,
+ /'SY-SYSID',SY-SYSID,
+ /'SY-TCODE',SY-TCODE,
+ /'SY-UNAME',SY-UNAME,
+ /'SY-UZEIT',SY-UZEIT.
+
+*---------------------------------------------------------------------------------------

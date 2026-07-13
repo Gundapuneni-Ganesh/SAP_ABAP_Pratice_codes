@@ -1,0 +1,87 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_FOURTYEIGHT_PROGRAM
+*&---------------------------------------------------------------------*
+*&  Here we call th FACTORY method and DISPLAY method with " full screen " by suing CL_SLAV_TABLE class
+
+* => Here in CL_SALV_TABLE  . we dont need to declare the field catalog  and alv function module and we dont need to configure .
+    " here in the ALV OBJECT MODEL we cannot edit in alv report
+
+*                                   ALV by CL_SALV_TABLE Class
+
+*1) CL_SALV_TABLE class is a part of ALV object model.
+*2) ALV object model is an encapsulation of the the pre-existing ALV tools.
+*3) For Example - CL_SALV_TABLE actually combines both the CL_GUI_ALV_GRID class for
+*   container implementation, as well as the REUSE_ALV_GRID_DISPLAY and REUSE_ALV_LIST_DISPLAY
+*   function modules for full screen display.
+
+
+*&---------------------------------------------------------------------*
+REPORT ZGC_FOURTYEIGHT_PROGRAM.
+
+
+DATA: lv_number TYPE zde_36_std_rnum.
+SELECT-OPTIONS : lv_num FOR lv_number.
+
+TYPES: BEGIN OF st_dt1,
+         s_number       TYPE zde_36_std_rnum,
+         s_name         TYPE  zde_36_std_name,
+         s_branch       TYPE  zde_36_std_branch,
+         s_phone_number TYPE  zde_36_std_pnum,
+       END OF st_dt1,
+
+       BEGIN OF st_dt2,
+         s_enroll_id   TYPE zde_36_std_enroll_id,
+         s_number      TYPE zde_36_std_rnum,
+         s_course_id   TYPE zde_36_std_course_id,
+         s_enroll_date TYPE zde_36_std_enroll_date,
+       END OF st_dt2.
+
+DATA: wa_dt1 TYPE st_dt1,
+      lt_dt1 TYPE TABLE OF st_dt1,
+      wa_dt2 TYPE st_dt2,
+      lt_dt2 TYPE TABLE OF st_dt2.
+
+DATA: wa_fit TYPE zst_36_ct_view,
+      lt_fit TYPE ztt_36_ct_view.
+
+DATA: lo_alv type ref to cl_salv_table.
+
+START-OF-SELECTION.
+
+  SELECT s_number s_name s_branch s_phone_number
+  FROM zdt_36_std_table INTO TABLE lt_dt1 WHERE s_number IN lv_num.
+
+  IF lt_dt1 IS NOT INITIAL.
+    SELECT s_enroll_id s_number  s_course_id s_enroll_date FROM zdt_36_std_enrol INTO TABLE lt_dt2 FOR ALL ENTRIES IN lt_dt1 WHERE s_number = lt_dt1-s_number.
+  ENDIF.
+
+  LOOP AT lt_dt1 INTO wa_dt1.
+    LOOP AT lt_dt2 INTO wa_dt2 WHERE s_number = wa_dt1-s_number.
+      wa_fit-s_number = wa_dt1-s_number.
+      wa_fit-s_name = wa_dt1-s_name.
+      wa_fit-s_branch = wa_dt1-s_branch.
+      wa_fit-s_enroll_id = wa_dt2-s_enroll_id.
+      wa_fit-s_course_id = wa_dt2-s_course_id.
+      wa_fit-s_enroll_date = wa_dt2-s_enroll_date.
+      APPEND wa_fit TO lt_fit.
+*      CLEAR wa_fit.
+    ENDLOOP.
+  ENDLOOP.
+
+
+TRY.
+CALL METHOD cl_salv_table=>factory  " This is the factory method
+*  EXPORTING
+*    list_display   = IF_SALV_C_BOOL_SAP=>FALSE
+*    r_container    =
+*    container_name =
+  IMPORTING
+    r_salv_table   = LO_ALV  " Here we should give the name for the cl_salv_table factory method parameter reference name
+  CHANGING
+    t_table        = LT_FIT    "Here we should give the final data table type
+    .
+ CATCH cx_salv_msg .
+ENDTRY.
+
+CALL METHOD lo_alv->display  " This is the display method
+    .

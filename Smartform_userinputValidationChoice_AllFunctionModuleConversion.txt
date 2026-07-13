@@ -1,0 +1,204 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_THIRTYSEVEN_PROGRAM
+*&---------------------------------------------------------------------*
+*& Smartform_userinputValidationChoice_AllFunctionModuleConversion
+*&---------------------------------------------------------------------*
+REPORT ZGC_THIRTYSEVEN_PROGRAM.
+
+data: lv_fname type RS38L_FNAM,
+      lv_id    type z25_de_std_id,
+      ls_op    type SSFCOMPOP,
+      ls_cp    type SSFCTRLOP,
+      ls_info  type SSFCRESCL,
+      lv_binf  type XSTRING,
+      lt_solix type solix_tab,
+      lt_line type table of tline.
+
+select-OPTIONS s_id for lv_id.
+
+*PARAMETERS p_id type z25_de_std_id.
+
+types : BEGIN OF st_std,
+        id     type Z25_DE_STD_ID,
+        name   type Z25_DE_STD_NAME,
+        branch type Z25_DE_STD_BRANCH,
+        gender type Z25_DE_STD_GENDER,
+        age    type Z25_DE_STD_AGE,
+        END OF st_std.
+
+
+  TYPES : TT_STD TYPE TABLE OF ST_STD.
+
+  types : BEGIN OF st_std1,
+        id     type Z25_DE_STD_ID,
+        name   type Z25_DE_STD_NAME,
+        branch type Z25_DE_STD_BRANCH,
+        gender type Z25_DE_STD_GENDER,
+        age    type Z25_DE_STD_AGE,
+        END OF st_std1.
+
+
+  TYPES : TT_STD1 TYPE TABLE OF ST_STD1.
+
+    data : lt_std type tt_std,
+           ls_std type st_std,
+           lt_std1 type tt_std1,
+           ls_std1 type st_std1.
+
+
+  SELECT  std_id
+       std_name
+       std_branch
+       std_gender
+       std_age
+  from zstd_data into table lt_std where std_id in S_ID.
+
+
+*SELECT  single std_id
+*       std_name
+*       std_branch
+*       std_gender
+*       std_age
+*  from zstd_data into ls_std1 where std_id eq p_ID.
+ append ls_std1 to  lt_std1.
+
+CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'
+  EXPORTING
+    FORMNAME                 = 'Z25_FORM2'
+*   VARIANT                  = ' '
+*   DIRECT_CALL              = ' '
+ IMPORTING
+   FM_NAME                  = LV_FNAME
+ EXCEPTIONS
+   NO_FORM                  = 1
+   NO_FUNCTION_MODULE       = 2
+   OTHERS                   = 3
+          .
+
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+ls_op-TDDEST    = 'LOCL'.
+LS_CP-NO_DIALOG = 'X'.
+LS_CP-PREVIEW   = 'X'.
+ls_cp-GETOTF = 'X'.
+
+CALL FUNCTION LV_FNAME
+  EXPORTING
+
+   CONTROL_PARAMETERS         = ls_cp
+   OUTPUT_OPTIONS             = ls_op
+   USER_SETTINGS              = ' '
+    LT_STD                     = lt_std
+    LT_STD1                    = lt_std1
+ IMPORTING
+   JOB_OUTPUT_INFO            = LS_INFO
+   LS_STD                     = ls_std
+   LS_STD1                    = ls_std1
+ EXCEPTIONS
+   FORMATTING_ERROR           = 1
+   INTERNAL_ERROR             = 2
+   SEND_ERROR                 = 3
+   USER_CANCELED              = 4
+   OTHERS                     = 5
+          .
+IF SY-SUBRC eq 0.
+
+"Convert OTF to PDF.
+CALL FUNCTION 'CONVERT_OTF'
+ EXPORTING
+   FORMAT                      = 'PDF' "'ASCII'
+ IMPORTING
+   BIN_FILE                    = lv_binf
+  TABLES
+    OTF                         = LS_INFO-OTFDATA
+    LINES                       = lt_line
+ EXCEPTIONS
+   ERR_MAX_LINEWIDTH           = 1
+   ERR_FORMAT                  = 2
+   ERR_CONV_NOT_POSSIBLE       = 3
+   ERR_BAD_OTF                 = 4
+   OTHERS                      = 5
+          .
+
+"Convert PDF xstring format to Binary format.
+
+CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+  EXPORTING
+    BUFFER                = lv_binf
+*   APPEND_TO_TABLE       = ' '
+* IMPORTING
+*   OUTPUT_LENGTH         =
+  TABLES
+    BINARY_TAB            = lt_solix
+          .
+
+
+
+
+IF SY-SUBRC  eq 0.
+CALL FUNCTION 'GUI_DOWNLOAD'
+  EXPORTING
+*   BIN_FILESIZE                    =
+    FILENAME                        = 'C:\USERS\10137231\DESKTOP\SFP.PDF'
+   FILETYPE                        = 'BIN'
+*   APPEND                          = ' '
+*   WRITE_FIELD_SEPARATOR           = ' '
+*   HEADER                          = '00'
+*   TRUNC_TRAILING_BLANKS           = ' '
+*   WRITE_LF                        = 'X'
+*   COL_SELECT                      = ' '
+*   COL_SELECT_MASK                 = ' '
+*   DAT_MODE                        = ' '
+*   CONFIRM_OVERWRITE               = ' '
+*   NO_AUTH_CHECK                   = ' '
+*   CODEPAGE                        = ' '
+*   IGNORE_CERR                     = ABAP_TRUE
+*   REPLACEMENT                     = '#'
+*   WRITE_BOM                       = ' '
+*   TRUNC_TRAILING_BLANKS_EOL       = 'X'
+*   WK1_N_FORMAT                    = ' '
+*   WK1_N_SIZE                      = ' '
+*   WK1_T_FORMAT                    = ' '
+*   WK1_T_SIZE                      = ' '
+*   WRITE_LF_AFTER_LAST_LINE        = ABAP_TRUE
+*   SHOW_TRANSFER_STATUS            = ABAP_TRUE
+*   VIRUS_SCAN_PROFILE              = '/SCET/GUI_DOWNLOAD'
+* IMPORTING
+*   FILELENGTH                      =
+  TABLES
+    DATA_TAB                        = lt_solix
+*   FIELDNAMES                      =
+ EXCEPTIONS
+   FILE_WRITE_ERROR                = 1
+   NO_BATCH                        = 2
+   GUI_REFUSE_FILETRANSFER         = 3
+   INVALID_TYPE                    = 4
+   NO_AUTHORITY                    = 5
+   UNKNOWN_ERROR                   = 6
+   HEADER_NOT_ALLOWED              = 7
+   SEPARATOR_NOT_ALLOWED           = 8
+   FILESIZE_NOT_ALLOWED            = 9
+   HEADER_TOO_LONG                 = 10
+   DP_ERROR_CREATE                 = 11
+   DP_ERROR_SEND                   = 12
+   DP_ERROR_WRITE                  = 13
+   UNKNOWN_DP_ERROR                = 14
+   ACCESS_DENIED                   = 15
+   DP_OUT_OF_MEMORY                = 16
+   DISK_FULL                       = 17
+   DP_TIMEOUT                      = 18
+   FILE_NOT_FOUND                  = 19
+   DATAPROVIDER_EXCEPTION          = 20
+   CONTROL_FLUSH_ERROR             = 21
+   OTHERS                          = 22
+          .
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+ENDIF.
+
+
+ENDIF.

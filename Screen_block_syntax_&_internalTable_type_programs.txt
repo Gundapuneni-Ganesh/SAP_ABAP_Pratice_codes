@@ -1,0 +1,102 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_TWELENTH_PROGRAM
+*&---------------------------------------------------------------------*
+*& Screen_block_syntax_&_internalTable_type_programs
+*&---------------------------------------------------------------------*
+REPORT ZGC_TWELENTH_PROGRAM.
+
+
+*---------------------------------------------------------------------------------------------------------------------
+SELECTION-SCREEN BEGIN OF BLOCK a WITH FRAME TITLE TEXT-001.
+
+PARAMETERS: number_1 TYPE p DECIMALS 2,
+            number_2 TYPE p DECIMALS 2,
+            add RADIOBUTTON GROUP g,
+            sub RADIOBUTTON GROUP g, "here if we tick the anyone in radiobutton . so it returns x
+            mul RADIOBUTTON GROUP g,  " here group specifies the we can choose one among group ofradio buttons . if you wont specify the group name is same ,we can select more the one option
+            div RADIOBUTTON GROUP g.
+
+SELECTION-SCREEN END OF BLOCK a.
+*---------------------------------------------------------------------------------------------------------------------
+
+TYPES: BEGIN OF st_dt,
+         lv_name(20) TYPE c,
+         lv_branch   TYPE c LENGTH 3,
+         lv_number(9) type c,
+         lv_fees     TYPE p LENGTH 6 DECIMALS 3,
+       END OF st_dt.
+
+DATA: wa_dt TYPE st_dt,
+      lt_dt TYPE sorted TABLE OF st_dt with unique key lv_number,
+      lt_sum TYPE TABLE OF st_dt.
+
+wa_dt-lv_name = 'Ganesh'.
+wa_dt-lv_number =  'Y22CIT025'.
+wa_dt-lv_branch = 'cit'.
+wa_dt-lv_fees = 45000.
+insert wa_dt inTO TABLE lt_dt.
+CLEAR:wa_dt.
+
+wa_dt-lv_name = 'suresh'.
+wa_dt-lv_number =  'Y22CIT026'.
+wa_dt-lv_branch = 'cit'.
+wa_dt-lv_fees = 40000.
+insert wa_dt inTO TABLE lt_dt.
+CLEAR:wa_dt.
+
+wa_dt-lv_name = 'pakesh'.
+wa_dt-lv_number =  'Y22CIT027'.
+wa_dt-lv_branch = 'cit'.
+wa_dt-lv_fees = 50000.
+insert wa_dt inTO TABLE lt_dt.
+CLEAR:wa_dt.
+
+wa_dt-lv_name = 'denaesh'.
+wa_dt-lv_number =  'Y22CIT028'.
+wa_dt-lv_branch = 'cit'.
+wa_dt-lv_fees = 30000.
+INSERT wa_dt INTO table lt_dt.
+CLEAR:wa_dt.
+
+wa_dt-lv_name = 'pakesh'.
+wa_dt-lv_number =  'Y22CIT029'.
+wa_dt-lv_branch = 'cit'.
+wa_dt-lv_fees = 10000.
+INSERT wa_dt INTO TABLE lt_dt.
+CLEAR:wa_dt.
+
+wa_dt-lv_name = 'Ganesh'.
+wa_dt-lv_number =  'Y22CIT025'.
+wa_dt-lv_branch = 'cit'.
+wa_dt-lv_fees = 20000.
+INSERT wa_dt INTO TABLE lt_dt.
+CLEAR:wa_dt.
+
+
+*SORT lt_dt BY lv_fees.
+DELETE lt_dt WHERE lv_fees = 10000.
+IF sy-subrc = 0.
+  WRITE : /  'The record was deleted '.
+ELSE.
+  WRITE: / 'Error was occured and data was not deleted '.
+ENDIF.
+
+READ TABLE lt_dt INTO wa_dt WITH KEY lv_fees = 10000. " here by default it is searching linear search
+IF sy-subrc = 0.
+  WRITE : / 'The record was  found '.
+ELSE.
+  WRITE: / 'Error was occured and data was not found ' COLOR 3.
+ENDIF.
+
+READ TABLE lt_dt INTO wa_dt WITH KEY lv_name = 'Ganesh'. " we are searching with binary search
+IF wa_dt-lv_name = 'Pakesh'.
+  wa_dt-lv_name = 'Mahesh'.
+  MODIFY lt_dt FROM wa_dt TRANSPORTING lv_name.  " here we are modifing the lv_name
+ENDIF.
+
+*loop at lt_dt into wa_dt, collect wa_dt into lt_sum.
+*endloop.
+
+LOOP AT lt_dt INTO wa_dt.
+  WRITE: / wa_dt-lv_name,wa_dt-lv_branch,wa_dt-lv_fees.
+ENDLOOP.

@@ -1,0 +1,300 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_SEVENTEENTH_PROGRAM
+*&---------------------------------------------------------------------*
+*&  Basic_ALV_Report_program
+*&---------------------------------------------------------------------*
+REPORT ZGC_SEVENTEENTH_PROGRAM.
+
+
+type-pools slis.
+
+DATA:lv_kunnr TYPE kunnr,
+     lv_fname TYPE char30,
+     lv_fVAL  TYPE kunnr,
+     lv_len   TYPE i.
+
+SELECTION-SCREEN BEGIN OF BLOCK a WITH FRAME TITLE TEXT-000.
+
+  SELECT-OPTIONS s_kunnr FOR lv_kunnr.
+SELECTION-SCREEN END OF BLOCK a.
+
+"How to declare local structure and Work area and internal table.
+
+TYPES : BEGIN OF st_kna1,    "Local structure
+          kunnr	TYPE kunnr,
+          land1	TYPE land1_gp,
+          name1	TYPE name1_gp,
+          name2	TYPE name2_gp,
+          ort01	TYPE ort01_gp,
+          pstlz	TYPE pstlz,
+        END OF st_kna1,
+
+        BEGIN OF st_knb1,
+          mandt TYPE mandt,
+          kunnr	TYPE kunnr,
+          bukrs	TYPE bukrs,
+          pernr	TYPE pernr_d,
+        END OF st_knb1,
+
+        BEGIN OF st_t001,
+          bukrs TYPE bukrs,
+          butxt TYPE butxt,
+          ort01 TYPE ort01,
+          land1 TYPE land1,
+          waers TYPE waers,
+        END OF st_t001.
+
+DATA : ls_kna1 TYPE st_kna1,                                    "Work area declaration
+       lt_kna1 TYPE STANDARD TABLE OF st_kna1 WITH KEY kunnr,   "Internal Table declration with Table type.
+       ls_knb1 TYPE st_knb1,
+       lt_knb1 TYPE TABLE OF st_knb1,
+       ls_t001 TYPE st_t001,
+       lt_t001 TYPE TABLE OF st_t001,
+       ls_fcat type slis_fieldcat_alv,
+       lt_fcat type slis_t_fieldcat_alv,
+       ls_list type SLIS_LISTHEADER,
+       lt_list type SLIS_T_LISTHEADER.
+
+"Filling fieldcat internal table.
+ls_fcat-fieldname = 'KUNNR'.              " HERE THE FIELD NAME IS MANDATORY SHOULD BE SAME AS IN THE INTERNAL TABLE DECLERATION  AND IT SHOULD BE IN CAPTIAL LETTERS ONLY
+ls_fcat-col_pos = '1'.                    " THIS IS FOR POSITION OF COLUMN
+ls_fcat-seltext_m = 'Customer Number'.    " THIS IS FOR COLUMN NAME DISPLAY AS USER GIVEN
+ls_fcat-emphasize = 'C310'.               " THE C IS MANDATORY  AND 3 IS COLOR NUMBER LIKR TYPE OF COLOR AND 1 IS FOR FOREGROUND ENABLE AND 0 IS FOR BACKGROUND IS DISABLE.
+ls_fcat-outputlen = '10'.                 " THIS IS FOR OUTPUT LENGTH WHICH SHOULD DISPLAY  FOR FULL DATA  AND COLUMN NAME ALSO
+ls_fcat-hotspot = 'X'.                    " THIS IS FOR THE CURSOR WILL DISPLAY AS A HAND SYMBOL WHEN WE X
+APPEND ls_fcat to lt_fcat.
+clear ls_fcat.
+
+ls_fcat-fieldname = 'LAND1'.
+ls_fcat-col_pos = '2'.
+ls_fcat-seltext_m = 'Country'.
+ls_fcat-emphasize = 'C410'.
+ls_fcat-outputlen = '3'.
+*ls_fcat-hotspot = 'X'.
+APPEND ls_fcat to lt_fcat.
+clear ls_fcat.
+
+ls_fcat-fieldname = 'NAME1'.
+ls_fcat-col_pos = '3'.
+ls_fcat-seltext_m = 'Name'.
+ls_fcat-emphasize = 'C510'.
+ls_fcat-outputlen = '35'.
+APPEND ls_fcat to lt_fcat.
+clear ls_fcat.
+
+ls_fcat-fieldname = 'NAME2'.
+ls_fcat-col_pos = '4'.
+ls_fcat-seltext_m = 'S Name'.
+ls_fcat-emphasize = 'C601'.
+ls_fcat-outputlen = '35'.
+APPEND ls_fcat to lt_fcat.
+clear ls_fcat.
+
+ls_fcat-fieldname = 'ORT01'.
+ls_fcat-col_pos = '5'.
+ls_fcat-seltext_m = 'City'.
+ls_fcat-emphasize = 'C701'.
+ls_fcat-outputlen = '35'.
+APPEND ls_fcat to lt_fcat.
+clear ls_fcat.
+
+ls_fcat-fieldname = 'PSTLZ'.
+ls_fcat-col_pos = '6'.
+ls_fcat-seltext_m = 'Pincode'.
+ls_fcat-emphasize = 'C410'.
+ls_fcat-outputlen = '10'.
+APPEND ls_fcat to lt_fcat.
+clear ls_fcat.
+
+
+
+
+START-OF-SELECTION.
+
+  SELECT         kunnr
+                 land1
+                 name1
+                 name2
+                 ort01
+                 pstlz FROM kna1 INTO TABLE lt_kna1 WHERE kunnr IN s_kunnr.
+
+  IF sy-subrc EQ 0.
+
+"Reuse_alv_grid_display.
+CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+ EXPORTING " INPUT VALUES
+*   I_INTERFACE_CHECK                 = ' '
+*   I_BYPASSING_BUFFER                = ' '
+*   I_BUFFER_ACTIVE                   = ' '
+   I_CALLBACK_PROGRAM                = sy-repid" or Sy-cprog. "'ZTEST' " HERE WE SHOULD GIVE THE PROGRAM NAME
+*   I_CALLBACK_PF_STATUS_SET          = ' '
+*   I_CALLBACK_USER_COMMAND           = ' '
+  I_CALLBACK_TOP_OF_PAGE            = 'TOP1'
+*   I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*   I_CALLBACK_HTML_END_OF_LIST       = ' '
+*   I_STRUCTURE_NAME                  = 'ST_KNA1'
+*   I_BACKGROUND_ID                   = ' '
+*   I_GRID_TITLE                      =
+*   I_GRID_SETTINGS                   =
+*   IS_LAYOUT                         =
+   IT_FIELDCAT                       = lt_fcat "
+*   IT_EXCLUDING                      =
+*   IT_SPECIAL_GROUPS                 =
+*   IT_SORT                           =
+*   IT_FILTER                         =
+*   IS_SEL_HIDE                       =
+*   I_DEFAULT                         = 'X'
+*   I_SAVE                            = ' '
+*   IS_VARIANT                        =
+*   IT_EVENTS                         =
+*   IT_EVENT_EXIT                     =
+*   IS_PRINT                          =
+*   IS_REPREP_ID                      =
+*   I_SCREEN_START_COLUMN             = 0
+*   I_SCREEN_START_LINE               = 0
+*   I_SCREEN_END_COLUMN               = 0
+*   I_SCREEN_END_LINE                 = 0
+*   I_HTML_HEIGHT_TOP                 = 0
+*   I_HTML_HEIGHT_END                 = 0
+*   IT_ALV_GRAPHICS                   =
+*   IT_HYPERLINK                      =
+*   IT_ADD_FIELDCAT                   =
+*   IT_EXCEPT_QINFO                   =
+*   IR_SALV_FULLSCREEN_ADAPTER        =
+*   O_PREVIOUS_SRAL_HANDLER           =
+*   O_COMMON_HUB                      =
+* IMPORTING
+*   E_EXIT_CAUSED_BY_CALLER           =
+*   ES_EXIT_CAUSED_BY_USER            =
+  TABLES
+    t_outtab                          = lt_kna1  " HERE WE SHOULD GIVE THE INTERNAL TABLE NAME  . NOT WORK AREA
+ EXCEPTIONS
+   PROGRAM_ERROR                     = 1
+   OTHERS                            = 2
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+*    LOOP AT lt_kna1 INTO ls_kna1.
+*      WRITE:/ ls_kna1-kunnr COLOR 1, ls_kna1-land1 COLOR 2,
+*              ls_kna1-name1 COLOR 3, ls_kna1-name2 COLOR 4,
+*              ls_kna1-ort01 COLOR 5, ls_kna1-pstlz COLOR 6.
+*
+**      CLEAR ls_kna1.
+**      HIDE: ls_kna1-kunnr,ls_kna1-land1,ls_kna1-name1.
+*    ENDLOOP.
+
+  ELSE.
+    MESSAGE 'No Data Found Based on your input' TYPE 'E'.
+  ENDIF.
+
+
+*AT LINE-SELECTION.
+*
+*  GET CURSOR FIELD lv_fname VALUE lv_fval.
+*
+*
+*  IF lv_fname EQ 'LS_KNA1-KUNNR'.
+*
+*    lv_len = strlen( lv_fval ).
+*    CONDENSE lv_fval.
+*    IF lv_len < 10.
+*      lv_fval = |{ lv_fval ALPHA = IN }|.
+*    ENDIF.
+*
+*    SELECT  mandt kunnr bukrs pernr FROM knb1 INTO TABLE lt_knb1
+*    WHERE kunnr = lv_fval."lv_fval.
+*    IF sy-subrc EQ 0.
+*      CLEAR :lv_fname,lv_fval.
+*
+*      LOOP AT  lt_knb1 INTO ls_knb1.
+*        WRITE:/ ls_knb1-kunnr COLOR 3,ls_knb1-bukrs COLOR 4,ls_knb1-pernr COLOR 5.
+*        CLEAR : ls_knb1.
+*      ENDLOOP.
+*
+*    ENDIF.
+
+*  ENDIF.
+
+*AT LINE-SELECTION.
+*
+*  GET CURSOR FIELD lv_fname VALUE lv_fval.
+*
+*  IF lv_fname EQ 'LS_KNB1-BUKRS'.
+*
+*    SELECT  bukrs
+*            butxt
+*            ort01
+*            land1
+*            waers FROM t001 INTO TABLE lt_t001
+*      WHERE bukrs EQ lv_fval.
+*    IF sy-subrc EQ 0.
+*      LOOP AT lt_t001 INTO ls_t001.
+*        WRITE:/ ls_t001-bukrs COLOR 2,ls_t001-butxt COLOR 3,ls_t001-land1 COLOR 4,
+*                ls_t001-ort01 COLOR 5,ls_t001-waers COLOR 6.
+*      ENDLOOP.
+*
+*    ELSE.
+**    MESSAGE 'No Record found based on your selection' type 'S'.
+*      MESSAGE e000(zciet) WITH lv_fval.
+*
+*    ENDIF.
+*
+*  ENDIF.
+
+FORM TOP1.
+
+* Big Header Line
+  ls_list-typ  = 'H'.
+  ls_list-info = 'CHALAPATHI INSTITUTE OF ENGINEERING & TECHNOLOGY'.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* Space Line (Optional)
+  ls_list-typ  = 'S'.
+  ls_list-info = space.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* Program Name
+  ls_list-typ = 'S'.
+  ls_list-key = 'Program Name:'.
+  ls_list-info = sy-repid.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* User Name
+  ls_list-typ = 'S'.
+  ls_list-key = 'User Name:'.
+  ls_list-info = sy-uname.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* Time
+  ls_list-typ = 'S'.
+  ls_list-key = 'Time:'.
+  ls_list-info = sy-uzeit.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* Date
+  ls_list-typ = 'S'.
+  ls_list-key = 'Date:'.
+  ls_list-info = sy-datum.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+
+
+
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      it_list_commentary       = lt_list
+     I_LOGO                   = 'CIET_UNIVERSITY_LOGO'
+*     I_END_OF_LIST_GRID       =
+*     I_ALV_FORM               =
+            .
+
+
+  ENDFORM.

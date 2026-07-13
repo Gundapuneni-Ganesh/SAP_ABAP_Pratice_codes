@@ -1,0 +1,24 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_TWENTYTWO_PROGRAM
+*&---------------------------------------------------------------------*
+*& Function_module_calling_program
+*&---------------------------------------------------------------------*
+REPORT zgc_twentytwo_program.
+
+
+
+DATA: lt_final TYPE zit_36_ct_view,
+      wa_final TYPE zst_36_ct_view.
+
+PARAMETERS std_num TYPE zde_36_std_rnum.
+
+CALL FUNCTION 'ZFM_COMB_STD_ENROL'
+  EXPORTING
+    s_num    = std_num
+  IMPORTING
+    lt_final = lt_final.
+
+LOOP AT lt_final INTO wa_final.
+  WRITE: / wa_final-s_number,wa_final-s_name,wa_final-s_branch,wa_final-s_enroll_id,
+  wa_final-s_course_id,wa_final-s_enroll_date.
+ENDLOOP.

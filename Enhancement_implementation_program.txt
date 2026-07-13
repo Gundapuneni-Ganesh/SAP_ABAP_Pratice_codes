@@ -1,0 +1,60 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_FOURTYSIX_PROGRAM
+*&---------------------------------------------------------------------*
+*& Enhancement_implementation_program
+*&---------------------------------------------------------------------*
+REPORT ZGC_FOURTYSIX_PROGRAM.
+
+PARAMETERS:LV_NUM1 TYPE I,
+           LV_NUM2 TYPE I.
+
+DATA: RESULT TYPE I,
+      ADD TYPE P ,
+      SUB TYPE P.
+
+" DIVISION ENHANCEMENT EXPLICT  . This is also explict enhancement . but while creation the code auto matically will come for doing enhancementn.
+ENHANCEMENT-SECTION ZENH_SECTION_DIVISION SPOTS ZE_SPOT_36 .
+
+
+RESULT = LV_NUM1 /  LV_NUM2.
+WRITE: / 'DIVISION  OF TWO NUMBERS : ', RESULT.
+
+END-ENHANCEMENT-SECTION.
+*$*$-Start: ZENH_SECTION_DIVISION---------------------------------------------------------------$*$*
+ENHANCEMENT 1  ZENH_EXP_DIVISION.    "active version
+
+if lv_num2 = 0.
+  write: 'The second number cannot be 0'.
+  else.
+RESULT = LV_NUM1 /  LV_NUM2.
+WRITE: / 'DIVISION  OF TWO NUMBERS : ', RESULT.
+endif.
+ENDENHANCEMENT.
+*$*$-End:   ZENH_SECTION_DIVISION---------------------------------------------------------------$*$*
+* -> The above code is default implementation . so here we can add and change the code , But in enhancement point we can only add
+
+" MULTIPLICATION ENHANCEMENT EXPLICT AT ENHANCEMENT POINT
+ENHANCEMENT-POINT ZENH_SP_MUL SPOTS ZE_SPOT_36 .
+*$*$-Start: ZENH_SP_MUL-------------------------------------------------------------------------$*$*
+ENHANCEMENT 1  ZENH_EXPLICT_MUL.    "active version
+
+RESULT = LV_NUM1 *  LV_NUM2.
+WRITE: / 'MULTIPLICATION  OF TWO NUMBERS : ', RESULT.
+
+ENDENHANCEMENT.
+*$*$-End:   ZENH_SP_MUL-------------------------------------------------------------------------$*$*
+
+
+RESULT = LV_NUM1 + LV_NUM2.
+WRITE: / 'ADDITION OF TWO NUMBERS : ', RESULT.
+
+" THIS IS IMPLICT ENHANCEMENT FOR SUBTRACTION
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""$"$\SE:(1) Include ZGC_FOURTYSIX_PROGRAM, End                                                                                                                S
+*$*$-Start: (1)---------------------------------------------------------------------------------$*$*
+ENHANCEMENT 1  ZENH_SUB.    "active version
+
+RESULT = LV_NUM1 - LV_NUM2.
+WRITE: / 'SUBTRACTION  OF TWO NUMBERS : ', RESULT.
+
+ENDENHANCEMENT.
+*$*$-End:   (1)---------------------------------------------------------------------------------$*$*

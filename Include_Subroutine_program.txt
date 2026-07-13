@@ -1,0 +1,92 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_TWENTYFIVE_PROGRAM
+*&---------------------------------------------------------------------*
+*& Include_Subroutine_program
+*&---------------------------------------------------------------------*
+REPORT zgc_twentyfive_program.
+*
+*TYPES: BEGIN OF st_dt1,
+*         s_number       TYPE zde_36_std_rnum,
+*         s_name         TYPE  zde_36_std_name,
+*         s_branch       TYPE  zde_36_std_branch,
+*         s_phone_number TYPE  zde_36_std_pnum,
+*       END OF st_dt1,
+*
+*       BEGIN OF st_dt2,
+*         s_enroll_id   TYPE zde_36_std_enroll_id,
+*         s_number      TYPE zde_36_std_rnum,
+*         s_course_id   TYPE zde_36_std_course_id,
+*         s_enroll_date TYPE zde_36_std_enroll_date,
+*       END OF st_dt2.
+*
+*DATA: wa_dt1 TYPE st_dt1,
+*      lt_dt1 TYPE TABLE OF st_dt1,
+*      wa_dt2 TYPE st_dt2,
+*      lt_dt2 TYPE TABLE OF st_dt2.
+*
+*perform assign using 'Y22CIT025' 'Ganesh' 'cit' '1234567890' changing lt_dt1.
+*
+*form assign using s_number s_name s_branch s_phone_number changing lt_dt.
+*
+*wa_dt1-s_number = s_number.
+*wa_dt1-s_name = s_name.
+*wa_dt1-s_branch = s_branch.
+*wa_dt1-s_phone_number = s_phone_number.
+*APPEND wa_dt1 TO lt_dt.
+*  endform.
+*
+**wa_dt1-s_number = 'Y22CITO25'.
+**wa_dt1-s_name = 'Ganesh Chowdary'.
+**wa_dt1-s_branch = 'IT'.
+**wa_dt1-s_phone_number = '1234567890'.
+**APPEND wa_dt1 TO lt_dt1.
+*
+*
+*LOOP AT lt_dt1 INTO wa_dt1.
+*  WRITE: / wa_dt1-s_number,wa_dt1-s_name,wa_dt1-s_branch,wa_dt1-s_phone_number.
+*ENDLOOP.
+
+
+TYPES: BEGIN OF st_dt1,
+         s_number       TYPE zde_36_std_rnum,
+         s_name         TYPE zde_36_std_name,
+         s_branch       TYPE zde_36_std_branch,
+         s_phone_number TYPE zde_36_std_pnum,
+       END OF st_dt1.
+
+DATA: wa_dt1 TYPE st_dt1,
+      lt_dt1 TYPE TABLE OF st_dt1.
+
+* Call FORM
+PERFORM assign USING 'Y22CIT025'
+                     'Ganesh'
+                     'CIT'
+                     '1234567890'
+               CHANGING lt_dt1.
+
+* Display Da
+LOOP AT lt_dt1 INTO wa_dt1.
+  WRITE: / wa_dt1-s_number,
+           wa_dt1-s_name,
+           wa_dt1-s_branch,
+           wa_dt1-s_phone_number.
+ENDLOOP.
+
+
+FORM assign USING    p_number TYPE zde_36_std_rnum
+                     p_name   TYPE zde_36_std_name
+                     p_branch TYPE zde_36_std_branch
+                     p_phone  TYPE zde_36_std_pnum
+            CHANGING pt_table TYPE. "TABLE OF st_dt1.
+
+  DATA: ls_dt1 TYPE st_dt1.
+
+
+  ls_dt1-s_number       = p_number.
+  ls_dt1-s_name         = p_name.
+  ls_dt1-s_branch       = p_branch.
+  ls_dt1-s_phone_number = p_phone.
+
+  APPEND ls_dt1 TO pt_table.
+   CLEAR ls_dt1.
+ENDFORM.

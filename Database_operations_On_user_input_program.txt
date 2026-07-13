@@ -1,0 +1,360 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_THIRTY_PROGRAM
+*&---------------------------------------------------------------------*
+*& Database_operations_On_user_input_program
+*&---------------------------------------------------------------------*
+REPORT ZGC_THIRTY_PROGRAM.
+
+
+TYPES :
+  BEGIN OF st_stu,"STRUCTURE FOR THE STUDENT ID
+    student_id TYPE zdeid35,
+  END OF st_stu.
+TYPES : BEGIN OF st_display,
+          full_name     TYPE zdefn35,
+          date_of_birth TYPE zdedob35,
+          gender        TYPE zdegen35,
+          email         TYPE zdeemail35,
+          phone_number  TYPE zdepho35,
+          state         TYPE zdestate35,
+        END OF st_display.
+DATA :
+      ls_stu     TYPE zstu_master_35,
+      lT_stu     TYPE TABLE OF zstu_master_35, "lwa_data
+      lt_ono     TYPE TABLE OF st_stu,
+      ls_ono     TYPE st_stu,
+      ls_display TYPE st_display,
+      lt_display TYPE TABLE OF st_display,
+       ls_fcat TYPE slis_fieldcat_alv,
+       lt_fcat TYPE slis_t_fieldcat_alv,
+       lt_list   TYPE slis_t_listheader,
+       ls_list   TYPE slis_listheader.
+
+"taking input from the user
+PARAMETERS :
+  p_id    TYPE zdeid35 OBLIGATORY, "obligatory means mandatory
+  p_name  TYPE zdefn35 MODIF ID a1, "modif id to DISABLE records
+  p_dob   TYPE zdedob35 MODIF ID a2,
+  p_gen   TYPE zdegen35 MODIF ID a3,
+  p_mail  TYPE zdeemail35 MODIF ID a4,
+  p_phone TYPE zdepho35 MODIF ID a5,
+  p_state TYPE zdestate35 MODIF ID a6,
+  p_r1    TYPE c RADIOBUTTON GROUP r1 USER-COMMAND abc, "FUNCTION CODE  "insert
+  p_r2    TYPE c RADIOBUTTON GROUP r1, "delete
+  p_r3    TYPE c RADIOBUTTON GROUP r1, "update
+  p_r4    TYPE c RADIOBUTTON GROUP r1, "modify
+  p_R5 TYPE c RADIOBUTTON GROUP r1.   "Display records
+
+
+START-OF-SELECTION."when user click execute
+
+  "insert
+  IF p_r1 = 'X'.
+    ls_stu-student_id = p_id.
+    ls_stu-full_name  = p_name.
+    ls_stu-date_of_birth = p_dob.
+    ls_stu-gender = p_gen.
+    ls_stu-email = p_mail.
+    ls_stu-phone_number = p_phone.
+    ls_stu-state = p_state.
+
+    INSERT zstu_master_35 FROM ls_stu.
+
+    IF sy-subrc = 0.
+      WRITE : TEXT-000."success
+    ELSE.
+      WRITE : TEXT-001."failed
+    ENDIF.
+  ENDIF.
+
+  "DELETE
+  IF p_r2 = 'X'.
+    ls_stu-student_id = p_id.
+    DELETE zstu_master_35 FROM ls_stu.
+    IF sy-subrc = 0.
+      WRITE : TEXT-002, p_id.
+    ENDIF.
+  ENDIF.
+
+IF P_R3 = 'X'.
+  ls_stu-student_id = p_id.
+    ls_stu-full_name  = p_name.
+    ls_stu-date_of_birth = p_dob.
+    ls_stu-gender = p_gen.
+    ls_stu-email = p_mail.
+    ls_stu-phone_number = p_phone.
+    ls_stu-state = p_state.
+
+    UPDATE zstu_master_35 FROM LS_STU.
+    IF SY-SUBRC = 0.
+      WRITE : TEXT-003, p_id.
+      ENDIF.
+  ENDIF.
+
+  "modify
+  if p_r4 = 'X'.
+     ls_stu-student_id = p_id.
+    ls_stu-full_name  = p_name.
+    ls_stu-date_of_birth = p_dob.
+    ls_stu-gender = p_gen.
+    ls_stu-email = p_mail.
+    ls_stu-phone_number = p_phone.
+    ls_stu-state = p_state.
+
+    modify zstu_master_35 FROM LS_STU.
+    IF SY-SUBRC = 0.
+      WRITE : TEXT-004, p_id.
+      ENDIF.
+
+    endif.
+
+IF P_R5 = 'X'.
+
+   SELECT mandt student_id full_name date_of_birth gender email phone_number state
+    FROM zstu_master_35
+    INTO TABLE lt_stu
+    WHERE student_id = p_id.
+
+ls_fcat-fieldname = 'MANDT'.
+ls_fcat-col_pos = '1'.
+ls_fcat-seltext_m = 'Client Number'.
+ls_fcat-emphasize = 'C310'.
+ls_fcat-outputlen = '5'.
+*ls_fcat-hotspot = 'X'.
+*ls_fcat-
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 'STUDENT_ID'.
+ls_fcat-col_pos = '2'.
+ls_fcat-seltext_m = 'Country'.
+ls_fcat-emphasize = 'C110'.
+ls_fcat-outputlen = '10'.
+ls_fcat-hotspot = 'X'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 'FULL_NAME'.
+ls_fcat-col_pos = '3'.
+ls_fcat-seltext_m = 'Full Name'.
+ls_fcat-emphasize = 'C210'.
+ls_fcat-outputlen = '35'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 'DATE_OF_BIRTH'.
+ls_fcat-col_pos = '4'.
+ls_fcat-seltext_m = 'DOB'.
+ls_fcat-emphasize = 'C301'.
+ls_fcat-outputlen = '10'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 'GENDER'.
+ls_fcat-col_pos = '5'.
+ls_fcat-seltext_m = 'Gender'.
+ls_fcat-emphasize = 'C101'.
+ls_fcat-outputlen = '10'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 'EMAIL'.
+ls_fcat-col_pos = '6'.
+ls_fcat-seltext_m = 'Email'.
+ls_fcat-emphasize = 'C510'.
+ls_fcat-outputlen = '25'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 'PHONE_NUMBER'.
+ls_fcat-col_pos = '7'.
+ls_fcat-seltext_m = 'Mobile No.'.
+ls_fcat-emphasize = 'C610'.
+ls_fcat-outputlen = '10'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 'STATE'.
+ls_fcat-col_pos = '8'.
+ls_fcat-seltext_m = 'State'.
+ls_fcat-emphasize = 'C710'.
+ls_fcat-outputlen = '20'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+IF sy-subrc = 0.
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      i_callback_program     = sy-repid
+      i_callback_top_of_page = 'TOP1'
+*      i_structure_name       = 'ST_STU'
+
+      it_fieldcat            = lt_fcat
+    TABLES
+      t_outtab               = lt_STU
+    EXCEPTIONS
+      program_error          = 1
+      OTHERS                 = 2.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+ENDIF.
+  ENDIF.
+
+FORM TOP1.
+
+* Big Header Line
+  ls_list-typ  = 'H'.
+  ls_list-info = 'CHALAPATHI INSTITUTE OF ENGINEERING & TECHNOLOGY'.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* Space Line (Optional)
+  ls_list-typ  = 'S'.
+  ls_list-info = space.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* Program Name
+  ls_list-typ = 'S'.
+  ls_list-key = 'Program Name:'.
+  ls_list-info = sy-repid.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* User Name
+  ls_list-typ = 'S'.
+  ls_list-key = 'User Name:'.
+  ls_list-info = sy-uname.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* Time
+  ls_list-typ = 'S'.
+  ls_list-key = 'Time:'.
+  ls_list-info = |{ sy-uzeit TIME = USER }|.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+* Date
+  ls_list-typ = 'S'.
+  ls_list-key = 'Date:'.
+  ls_list-info = | { SY-DATUM DATE = USER } |.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+
+
+
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      it_list_commentary       = lt_list
+     I_LOGO                   = 'UNI_LOGO1'
+*     I_END_OF_LIST_GRID       =
+*     I_ALV_FORM               =
+            .
+
+
+  ENDFORM.
+
+
+
+
+AT SELECTION-SCREEN. " validating the input and giving the message
+  IF p_r1 = 'X'.
+    SELECT student_id
+      FROM zstu_master_35
+     INTO TABLE lt_ono
+      WHERE student_id = p_id.
+
+    IF sy-subrc = 0.
+      MESSAGE e003(zmsg35) WITH p_id.
+    ENDIF.
+  ENDIF.
+
+  IF p_r2 = 'X'.
+    SELECT SINGLE student_id
+      FROM zstu_master_35
+      INTO ls_ono
+      WHERE student_id = p_id.
+    IF sy-subrc <> 0.
+      MESSAGE e004(zmsg35) WITH p_id.
+    ENDIF.
+  ENDIF.
+
+  IF p_r3 = 'X'.
+    SELECT SINGLE student_id
+      FROM zstu_master_35
+      INTO ls_ono
+      WHERE student_id = p_id.
+    IF sy-subrc <> 0.
+      MESSAGE e004(zmsg35) WITH p_id.
+    ELSE.
+      SELECT SINGLE full_name date_of_birth gender email phone_number state
+         FROM zstu_master_35
+         INTO ls_display
+        WHERE student_id = p_id.
+    ENDIF.
+  ENDIF.
+
+if p_r4 = 'X'.
+   SELECT SINGLE full_name date_of_birth gender email phone_number state
+         FROM zstu_master_35
+         INTO ls_display
+        WHERE student_id = p_id.
+     if p_r4 <> 'X'.
+       clear ls_display.
+       endif.
+  endif.
+
+   IF p_r5 = 'X'.
+    SELECT SINGLE student_id
+      FROM zstu_master_35
+      INTO ls_ono
+      WHERE student_id = p_id.
+    IF sy-subrc <> 0.
+      MESSAGE e004(zmsg35) WITH p_id.
+     endif.
+     endif.
+
+AT SELECTION-SCREEN OUTPUT.
+  "delete
+
+  IF p_r2 = 'X'.
+
+    LOOP AT SCREEN.
+      IF screen-group1 = 'A1' OR screen-group1 = 'A2' OR  screen-group1 = 'A3'
+      OR screen-group1 = 'A4' OR screen-group1 = 'A5' OR screen-group1 = 'A6'.
+        screen-active = 0.
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+  IF p_r3 = 'X'.
+    p_name = ls_display-FULL_NAME.
+    p_dob = ls_display-DATE_OF_BIRTH.
+    p_gen = ls_display-GENDER.
+    p_mail = ls_display-EMAIL.
+    p_phone = ls_display-phone_number.
+    p_state = ls_display-state.
+  ENDIF.
+  IF p_r4 = 'X'.
+    p_name = ls_display-FULL_NAME.
+    p_dob = ls_display-DATE_OF_BIRTH.
+    p_gen = ls_display-GENDER.
+    p_mail = ls_display-EMAIL.
+    p_phone = ls_display-phone_number.
+    p_state = ls_display-state.
+  ENDIF.
+
+   IF p_r5 = 'X'.
+
+    LOOP AT SCREEN.
+      IF screen-group1 = 'A1' OR screen-group1 = 'A2' OR  screen-group1 = 'A3'
+      OR screen-group1 = 'A4' OR screen-group1 = 'A5' OR screen-group1 = 'A6'.
+        screen-active = 0.
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.

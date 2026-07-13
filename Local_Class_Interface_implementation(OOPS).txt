@@ -1,0 +1,103 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_FOURTYTHREE_PROGRAM
+*&---------------------------------------------------------------------*
+
+*-> 👉 Difference between Abstract Class & Interface?
+* Abstract class can have implemented and abstract methods, while interface only contains method declarations.
+* Interface supports multiple inheritance and provides pure contract-based design.
+
+*&---------------------------------------------------------------------*
+REPORT ZGC_FOURTYTHREE_PROGRAM.
+
+
+PARAMETERS:
+  lv_num   TYPE zde_36_std_rnum,
+  lv_en_id TYPE zde_36_std_enroll_id.
+
+DATA:
+  lv_name    TYPE zde_36_std_name,
+  lv_branch  TYPE zde_36_std_branch,
+  lv_number  TYPE zde_36_std_rnum,
+  lv_course  TYPE zde_36_std_course_id.
+
+*---------------------------------------------------------------------*
+* INTERFACE DEFINITION
+*---------------------------------------------------------------------*
+INTERFACE if_student_data.                                                  " The interface will declare with the 'INTERFACE' keyword
+                                                                            " In Interface only method definition there is no implementation
+  METHODS f_display1
+    IMPORTING
+      mp_num TYPE zde_36_std_rnum
+    EXPORTING
+      mp_name   TYPE zde_36_std_name
+      mp_branch TYPE zde_36_std_branch.
+
+  METHODS f_display2
+    IMPORTING
+      mp_enroll_id TYPE zde_36_std_enroll_id
+    EXPORTING
+      mp_number    TYPE zde_36_std_rnum
+      mp_course_id TYPE zde_36_std_course_id.
+
+ENDINTERFACE.
+
+*---------------------------------------------------------------------*
+* CLASS IMPLEMENTING INTERFACE
+*---------------------------------------------------------------------*
+CLASS second_class DEFINITION.            " If we are using Interface in our class . so we define the 'INTERFACE Interface_name' .
+                                          "so in the class we should implement the all methods . if not i will throw eror
+
+  PUBLIC SECTION.
+    INTERFACES if_student_data.
+ENDCLASS.
+
+*---------------------------------------------------------------------*
+* IMPLEMENTATION
+*---------------------------------------------------------------------*
+CLASS second_class IMPLEMENTATION.
+
+  METHOD if_student_data~f_display1.                       " While using the interface method in class implemetation so we should call with the 'INTERFACE_name~method_name'
+    SELECT SINGLE s_name s_branch
+      FROM zdt_36_std_table
+      INTO (mp_name, mp_branch)
+      WHERE s_number = mp_num.
+  ENDMETHOD.
+
+  METHOD if_student_data~f_display2.
+    SELECT SINGLE s_number s_course_id
+      FROM zdt_36_std_enrol
+      INTO (mp_number, mp_course_id)
+      WHERE s_enroll_id = mp_enroll_id.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+
+START-OF-SELECTION.
+
+  DATA lo_obj TYPE REF TO second_class.
+
+  CREATE OBJECT lo_obj.
+
+  "Call Interface Method 1
+  lo_obj->if_student_data~f_display1(
+    EXPORTING
+      mp_num    = lv_num
+    IMPORTING
+      mp_name   = lv_name
+      mp_branch = lv_branch ).
+
+  WRITE: / 'Name:', lv_name,
+         / 'Branch:', lv_branch.
+
+  "Call Interface Method 2
+  lo_obj->if_student_data~f_display2(
+    EXPORTING
+      mp_enroll_id = lv_en_id
+    IMPORTING
+      mp_number    = lv_number
+      mp_course_id = lv_course ).
+
+  WRITE: / 'Roll No:', lv_number,
+         / 'Course:', lv_course.

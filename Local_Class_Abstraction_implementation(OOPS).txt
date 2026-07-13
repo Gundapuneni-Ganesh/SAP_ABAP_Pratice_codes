@@ -1,0 +1,94 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_FOURTYTWO_PROGRAM
+*&---------------------------------------------------------------------*
+*& Local_Class_Abstraction_implementation(OOPS)
+*&---------------------------------------------------------------------*
+*-> Because abstraction
+* Because abstract methods require polymorphism and dynamic binding, while static methods use static binding and do not belong to object instances.
+* Therefore, ABAP does not allow static methods to be declared as abstract.
+
+*Abstract methods require:
+
+*✔ Runtime polymorphism
+*✔ Object reference
+*✔ Dynamic dispatch
+*-------------------------------------------------------------------------------------------------------------------
+REPORT zgc_fourtytwo_program.
+
+PARAMETERS: lv_num   TYPE zde_36_std_rnum,
+            lv_en_id TYPE zde_36_std_enroll_id.
+DATA:
+  lv_name    TYPE zde_36_std_name,
+  lv_branch  TYPE zde_36_std_branch,
+  lv_number  TYPE zde_36_std_rnum,
+  lv_course  TYPE zde_36_std_course_id.
+
+
+CLASS first_class DEFINITION ABSTRACT.
+  PUBLIC SECTION.
+    METHODS f_display1 ABSTRACT                                              " This is the instance Method Definition
+      IMPORTING
+        mp_num    TYPE zde_36_std_rnum
+      EXPORTING
+        mp_name   TYPE zde_36_std_name
+        mp_branch TYPE zde_36_std_branch.
+
+    CLASS-METHODS f_display2                                          " This is the static method  Definition
+      IMPORTING                                                        " For static method it cannot be an Abstract method .
+        mp_enroll_id TYPE zde_36_std_enroll_id
+      EXPORTING
+        mp_number    TYPE zde_36_std_rnum
+        mp_course_id TYPE zde_36_std_course_id.
+
+ENDCLASS.
+
+CLASS first_class IMPLEMENTATION.
+
+  METHOD f_display2.                    " Even this belongs to abstract class . we should implement the static method
+    SELECT SINGLE s_number s_course_id FROM zdt_36_std_enrol INTO (  mp_number , mp_course_id ) WHERE s_enroll_id = mp_enroll_id.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS second_class DEFINITION INHERITING FROM first_class.
+  PUBLIC SECTION.
+    METHODS f_display1 REDEFINITION.    " While implementing the abstarct method in sub class . so first we should do 'REDEFINITION' in definition of subclass
+ENDCLASS.
+
+CLASS second_class IMPLEMENTATION.
+
+  METHOD f_display1.
+    SELECT SINGLE s_name s_branch FROM zdt_36_std_table INTO (  mp_name , mp_branch ) WHERE s_number = mp_num.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+START-OF-SELECTION.
+
+  DATA lo_obj TYPE REF TO second_class.
+
+  CREATE OBJECT lo_obj.
+
+  "Call Instance Method
+  lo_obj->f_display1(
+    EXPORTING
+      mp_num    = lv_num
+    IMPORTING
+      mp_name   = lv_name
+      mp_branch = lv_branch ).
+
+  WRITE: / 'Name:', lv_name,
+         / 'Branch:', lv_branch.
+
+  "Call Static Method
+  first_class=>f_display2(
+    EXPORTING
+      mp_enroll_id = lv_en_id
+    IMPORTING
+      mp_number    = lv_number
+      mp_course_id = lv_course ).
+
+  WRITE: / 'Roll No:', lv_number,
+         / 'Course:', lv_course.

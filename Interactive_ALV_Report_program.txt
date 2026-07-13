@@ -1,0 +1,296 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_NINETEENTH_PROGRAM
+*&---------------------------------------------------------------------*
+*&  Interactive_ALV_Report_program WITH CUSTOMISATION 
+*&---------------------------------------------------------------------*
+REPORT zgc_nineteenth_program.
+
+
+
+TYPE-POOLS slis.
+
+DATA: ln_n TYPE zde_36_std_rnum.
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
+SELECT-OPTIONS lv_num FOR ln_n.
+SELECTION-SCREEN END OF BLOCK b1.
+
+TYPES: BEGIN OF st_data1,
+         s_number       TYPE zde_36_std_rnum,
+         s_name         TYPE zde_36_std_name,
+         s_branch       TYPE zde_36_std_branch,
+         s_phone_number TYPE zde_36_std_pnum,
+       END OF st_data1,
+
+
+       BEGIN OF st_data2,
+         s_enroll_id   TYPE zde_36_std_enroll_id,    " THis is for second Table
+         s_number      TYPE zde_36_std_rnum,
+         s_course_id   TYPE zde_36_std_course_id,
+         s_enroll_date TYPE zde_36_std_enroll_date,
+       END OF st_data2.
+
+DATA: wa_dt1  TYPE st_data1,                       " this is for first table
+      lt_std1 TYPE STANDARD TABLE OF st_data1,
+
+      ls_fcat TYPE slis_fieldcat_alv,
+      lt_fcat TYPE slis_t_fieldcat_alv,
+
+      ls_list TYPE slis_listheader,
+      lt_list TYPE slis_t_listheader.
+
+DATA: wa_dt2   TYPE st_data2,
+      lt_std2  TYPE STANDARD TABLE OF st_data2,     " This is for second table
+
+      ls_fcat2 TYPE slis_fieldcat_alv,
+      lt_fcat2 TYPE slis_t_fieldcat_alv,
+
+      ls_list2 TYPE slis_listheader,
+      lt_list2 TYPE slis_t_listheader.
+
+
+"Filling fieldcat internal table.
+
+ls_fcat-fieldname = 's_number'.
+ls_fcat-col_pos = '1'.
+ls_fcat-seltext_m = 'Student Roll Number'.
+ls_fcat-emphasize = 'C310'.
+ls_fcat-outputlen = '15'.
+ls_fcat-hotspot = 'X'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 's_name'.
+ls_fcat-col_pos = '2'.
+ls_fcat-seltext_m = 'Student Name'.
+ls_fcat-emphasize = 'C210'.
+ls_fcat-outputlen = '15'.
+*ls_fcat-hotspot = 'X'.                 "This is only used for the primary key, where x is mandatory
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = 's_branch'.
+ls_fcat-col_pos = '3'.
+ls_fcat-seltext_m = 'Student Branch Name'.
+ls_fcat-emphasize = 'C110'.
+ls_fcat-outputlen = '15'.
+*ls_fcat-hotspot = 'X'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+ls_fcat-fieldname = ' s_phone_number'.
+ls_fcat-col_pos = '4'.
+ls_fcat-seltext_m = 'Student Phone Number'.
+ls_fcat-emphasize = 'C410'.
+ls_fcat-outputlen = '15'.
+*ls_fcat-hotspot = 'X'.
+APPEND ls_fcat TO lt_fcat.
+CLEAR ls_fcat.
+
+
+
+
+START-OF-SELECTION.
+
+  SELECT s_number s_name s_branch s_phone_number FROM zdt_36_std_table INTO TABLE lt_std1 WHERE s_number IN lv_num.
+
+  IF sy-subrc EQ 0.
+    CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+      EXPORTING
+*       I_INTERFACE_CHECK       = ' '
+*       I_BYPASSING_BUFFER      = ' '
+*       I_BUFFER_ACTIVE         = ' '
+        i_callback_program      = sy-repid
+*       I_CALLBACK_PF_STATUS_SET          = ' '
+        i_callback_user_command = 'SEC_TAB'
+        i_callback_top_of_page  = 'TOP1'
+*       I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*       I_CALLBACK_HTML_END_OF_LIST       = ' '
+*       I_STRUCTURE_NAME        =
+*       I_BACKGROUND_ID         = ' '
+*       I_GRID_TITLE            =
+*       I_GRID_SETTINGS         =
+*       IS_LAYOUT               =
+        it_fieldcat             = lt_fcat
+*       IT_EXCLUDING            =
+*       IT_SPECIAL_GROUPS       =
+*       IT_SORT                 =
+*       IT_FILTER               =
+*       IS_SEL_HIDE             =
+*       I_DEFAULT               = 'X'
+*       I_SAVE                  = ' '
+*       IS_VARIANT              =
+*       IT_EVENTS               =
+*       IT_EVENT_EXIT           =
+*       IS_PRINT                =
+*       IS_REPREP_ID            =
+*       I_SCREEN_START_COLUMN   = 0
+*       I_SCREEN_START_LINE     = 0
+*       I_SCREEN_END_COLUMN     = 0
+*       I_SCREEN_END_LINE       = 0
+*       I_HTML_HEIGHT_TOP       = 0
+*       I_HTML_HEIGHT_END       = 0
+*       IT_ALV_GRAPHICS         =
+*       IT_HYPERLINK            =
+*       IT_ADD_FIELDCAT         =
+*       IT_EXCEPT_QINFO         =
+*       IR_SALV_FULLSCREEN_ADAPTER        =
+*       O_PREVIOUS_SRAL_HANDLER =
+* IMPORTING
+*       E_EXIT_CAUSED_BY_CALLER =
+*       ES_EXIT_CAUSED_BY_USER  =
+      TABLES
+        t_outtab                = lt_std1
+      EXCEPTIONS
+        program_error           = 1
+        OTHERS                  = 2.
+    IF sy-subrc <> 0.
+* Implement suitable error handling here
+    ENDIF.
+  ELSE.
+    MESSAGE 'the data was not getting from first query' TYPE 'E'.
+  ENDIF.
+
+FORM top1.
+  REFRESH lt_list.
+  ls_list-typ = 'H'.
+  ls_list-info = 'Chalapathi institute of Engineering And Technology'.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+  ls_list-typ = 'S'.
+  ls_list-key = 'Program Name :'.
+  ls_list-info = sy-repid.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+  ls_list-typ = 'S'.
+  ls_list-key = 'Roll-No'.
+  ls_list-info = 'Y22CIT025'.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+  ls_list-typ = 'S'.
+  ls_list-key = 'Time'.
+  ls_list-info =  |{ sy-uzeit TIME = USER }|.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+  ls_list-typ = 'S'.
+  ls_list-key = 'Date :'.
+
+  ls_list-info = |{ sy-datum DATE = USER }|.
+  APPEND ls_list TO lt_list.
+  CLEAR ls_list.
+
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      it_list_commentary = lt_list
+      i_logo             = 'CIET_UNIVERSITY_LOGO'
+*     I_END_OF_LIST_GRID =
+*     I_ALV_FORM         =
+    .
+ENDFORM.
+
+FORM sec_tab USING tab TYPE sy-ucomm
+      etab TYPE slis_selfield. " slis_selfield is the structure
+
+  "Filling fieldcat internal table.
+  ls_fcat2-fieldname = 's_enroll_id'.
+  ls_fcat2-col_pos = '1'.
+  ls_fcat2-seltext_m = 'Student Enrollment Number'.
+  ls_fcat2-emphasize = 'C310'.
+  ls_fcat2-outputlen = '15'.
+  ls_fcat2-hotspot = 'X'.
+  APPEND ls_fcat2 TO lt_fcat2.
+  CLEAR ls_fcat2.
+
+  ls_fcat2-fieldname = 's_number'.
+  ls_fcat2-col_pos = '2'.
+  ls_fcat2-seltext_m = 'Student Roll Number'.
+  ls_fcat2-emphasize = 'C310'.
+  ls_fcat2-outputlen = '15'.
+  ls_fcat2-hotspot = 'X'.
+  APPEND ls_fcat2 TO lt_fcat2.
+  CLEAR ls_fcat2.
+
+  ls_fcat2-fieldname = 's_course_id'.
+  ls_fcat2-col_pos = '3'.
+  ls_fcat2-seltext_m = 'Student Course Number'.
+  ls_fcat2-emphasize = 'C210'.
+  ls_fcat2-outputlen = '15'.
+  ls_fcat2-hotspot = 'X'.                 "This is only used for the primary key, where x is mandatory
+  APPEND ls_fcat2 TO lt_fcat2.
+  CLEAR ls_fcat2.
+
+  ls_fcat2-fieldname = 's_enroll_date'.
+  ls_fcat2-col_pos = '4'.
+  ls_fcat2-seltext_m = 'Student Enrollment Date'.
+  ls_fcat2-emphasize = 'C110'.
+  ls_fcat2-outputlen = '15'.
+  ls_fcat2-hotspot = 'X'.
+  APPEND ls_fcat2 TO lt_fcat2.
+  CLEAR ls_fcat2.
+
+  SELECT s_enroll_id s_number s_course_id s_enroll_date FROM zdt_36_std_enrol INTO TABLE lt_std2 WHERE s_number EQ etab-value.
+  IF sy-subrc EQ 0.
+
+    CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+      EXPORTING
+*       I_INTERFACE_CHECK  = ' '
+*       I_BYPASSING_BUFFER = ' '
+*       I_BUFFER_ACTIVE    = ' '
+        i_callback_program = sy-cprog
+*       I_CALLBACK_PF_STATUS_SET          = ' '
+*       I_CALLBACK_USER_COMMAND           = ' '
+*       I_CALLBACK_TOP_OF_PAGE            = ' '
+*       I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*       I_CALLBACK_HTML_END_OF_LIST       = ' '
+        i_structure_name   = 'wa_dt2'
+*       I_BACKGROUND_ID    = ' '
+*       I_GRID_TITLE       =
+*       I_GRID_SETTINGS    =
+*       IS_LAYOUT          =
+        it_fieldcat        = lt_fcat2
+*       IT_EXCLUDING       =
+*       IT_SPECIAL_GROUPS  =
+*       IT_SORT            =
+*       IT_FILTER          =
+*       IS_SEL_HIDE        =
+*       I_DEFAULT          = 'X'
+*       I_SAVE             = ' '
+*       IS_VARIANT         =
+*       IT_EVENTS          =
+*       IT_EVENT_EXIT      =
+*       IS_PRINT           =
+*       IS_REPREP_ID       =
+*       I_SCREEN_START_COLUMN             = 0
+*       I_SCREEN_START_LINE               = 0
+*       I_SCREEN_END_COLUMN               = 0
+*       I_SCREEN_END_LINE  = 0
+*       I_HTML_HEIGHT_TOP  = 0
+*       I_HTML_HEIGHT_END  = 0
+*       IT_ALV_GRAPHICS    =
+*       IT_HYPERLINK       =
+*       IT_ADD_FIELDCAT    =
+*       IT_EXCEPT_QINFO    =
+*       IR_SALV_FULLSCREEN_ADAPTER        =
+*       O_PREVIOUS_SRAL_HANDLER           =
+*   IMPORTING
+*       E_EXIT_CAUSED_BY_CALLER           =
+*       ES_EXIT_CAUSED_BY_USER            =
+      TABLES
+        t_outtab           = lt_std2
+      EXCEPTIONS
+        program_error      = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+* Implement suitable error handling here
+    ENDIF.
+ELSE.
+  MESSAGE 'No data found -----' TYPE 'E'.
+  ENDIF.
+
+
+  CLEAR: lt_list2 , lt_fcat2.
+ENDFORM.

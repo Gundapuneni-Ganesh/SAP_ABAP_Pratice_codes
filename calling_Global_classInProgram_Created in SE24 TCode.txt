@@ -1,0 +1,63 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_THIRTYEIGHT_PROGRAM
+*&---------------------------------------------------------------------*
+*& calling_Global_classInProgram Created in SE24 TCode
+*&---------------------------------------------------------------------*
+REPORT ZGC_THIRTYEIGHT_PROGRAM.
+
+*  This code for calling the class method with parameters
+
+PARAMETERS lv_num type ZDE_36_STD_RNUM.
+
+data: lt_data type ZTT_36_CT_VIEW,
+      wa_data type ZST_36_CT_VIEW.
+
+*select-options s_numb for lv_num.
+
+data lo_first type ref to ZCL_36_QUERYSEARCH.
+*create OBJECT lo_first.
+
+CALL METHOD zcl_36_querysearch=>zdcv_from_tables
+  EXPORTING
+    s_id           = LV_NUM
+  IMPORTING
+    res_table_data = LT_DATA
+    .
+
+loop at lt_data into wa_data.
+  write: / wa_data-s_number ,
+        / wa_data-s_name,
+        / wa_data-s_branch,
+        / wa_data-s_enroll_id,
+        / wa_data-s_course_id,
+        / wa_data-s_enroll_date.
+  endloop.
+*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+" This is for select-options code .
+
+*DATA lv_num type ZDE_36_STD_RNUM.
+*
+*data: lt_data type ZTT_36_CT_VIEW,
+*      wa_data type ZST_36_CT_VIEW.
+*
+*select-options s_numb for lv_num.
+*
+*data lo_first type ref to ZCL_36_QUERYSEARCH.
+*create OBJECT lo_first.
+*
+*CALL METHOD zcl_36_querysearch->zdcv_from_tables
+*  EXPORTING
+*    s_id           = LV_NUM
+*  IMPORTING
+*    res_table_data = LT_DATA
+*    .
+*
+*loop at lt_data into wa_data.
+*  write: / wa_data-s_number ,
+*        / wa_data-s_name,
+*        / wa_data-s_branch,
+*        / wa_data-s_enroll_id,
+*        / wa_data-s_course_id,
+*        / wa_data-s_enroll_date.
+*  endloop.

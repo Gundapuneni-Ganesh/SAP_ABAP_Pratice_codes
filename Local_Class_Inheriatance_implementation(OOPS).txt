@@ -1,0 +1,84 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_FOURTY_PROGRAM
+*&---------------------------------------------------------------------*
+*& Local_Class_Inheriatance_implementation(OOPS)
+*&---------------------------------------------------------------------*
+REPORT ZGC_FOURTY_PROGRAM.
+
+PARAMETERS: lv_num       TYPE zde_36_std_rnum,
+            lv_enrID TYPE zde_36_std_enroll_id.
+
+Data: lv_name type zde_36_std_name,
+      lv_branch type zde_36_std_branch.
+
+Data lv_course_id type zde_36_std_course_id.
+
+*---------------------------------------------------------------------*
+CLASS first_class DEFINITION.                                              " FIRST WE SHOULD DECLARE THE CLASS DEFINITION BY USING KEYWORDS OF 'CLASS' AND 'DEFINITION'
+  PUBLIC SECTION.                                                          " hERE WE SAY WHICH TYPE OF METHOD WE ARE DECLARING LIKE 'PUBLIC, PRIVATE,PROTECTED SECTION'
+
+    " Instance Method
+    METHODS display1                                                       "  THIS IS FOR THE 'INSTANCE METHOD' DEFINITION WITH 'METHODS' KEYWORD
+      IMPORTING  fmv_num    TYPE zde_36_std_rnum
+      EXPORTING  fmv_number TYPE zde_36_std_rnum
+                 fmv_name   TYPE zde_36_std_name
+                 fmv_branch TYPE zde_36_std_branch.
+
+    " Static Method
+    CLASS-METHODS display2                                                 "  THIS IS FOR THE 'STATIC METHOD' DEFINITION WITH 'CLASS-METHODS' KEYWORD
+      IMPORTING  fmv_enrol     TYPE zde_36_std_enroll_id
+      EXPORTING  fmv_number    TYPE zde_36_std_rnum
+                 fmv_enroll_id TYPE zde_36_std_enroll_id
+                 fmv_course_id TYPE zde_36_std_course_id.
+
+ENDCLASS.
+
+ class first_class IMPLEMENTATION.
+   METHOD DISPLAY1.
+     SELECT single S_NUMBER S_NAME S_BRANCH FROM ZDT_36_STD_TABLE
+        INTO ( FMV_NUMBER, FMV_NAME,FMV_BRANCH ) WHERE S_NUMBER = FMV_NUMber.
+     ENDMETHOD.
+
+   METHOD DISPLAY2.
+     SELECT single S_ENROLL_ID S_NUMBER S_COURSE_ID FROM ZDT_36_STD_ENROL
+        INTO ( fmv_enroll_id , fmv_number,fmv_course_id ) WHERE S_ENROLL_ID = FMV_ENROL.
+     ENDMETHOD.
+
+
+   ENDCLASS.
+
+*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CLASS SECOND_CLASS DEFINITION INHERITING FROM FIRST_CLASS.  " Here we are inheriting from the parent class of firstclass .
+                                                             "
+  ENDCLASS.
+class third_class DEFINITION INHERITING FROM first_class.
+
+  endclass.
+
+"Assign and creation of object for the sub class.
+
+START-OF-SELECTION.
+
+data lo_second_class type ref to second_class.
+CREATE OBJECT lo_second_class.
+
+lo_second_class->display1( exporting fmv_num = lv_num
+                             importing fmv_number = lv_num
+                                       fmv_name = lv_name
+                                       fmv_branch = lv_branch ).
+write : / lv_num , lv_name , lv_branch.
+
+
+
+*data lo_third_class type ref to third_class.
+**CREATE OBJECT lo_third_class.
+
+third_class=>display2( exporting fmv_enrol = lv_enrID                        " Static Method callling
+                             importing fmv_enroll_id = lv_enrID
+                                       fmv_number = lv_num
+                                       fmv_course_id = lv_course_id ).
+write : / lv_enrID , lv_num , lv_course_id.
+
+
+*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

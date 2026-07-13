@@ -1,0 +1,142 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_FOURTYSEVEN_PROGRAM
+*&---------------------------------------------------------------------*
+
+*1) Steps to Create ALV
+
+*Step1: Create a Field catalog.
+*   a) USE SAP Function Module( LVC_FIELDCATALOG_MERGE) to create a field catalog.
+*   b) Manually create a Fieldcatalog. {manually by giving the structure and table type by checking the LVC_T_FCAT of table type. remaing all process is same like before ALV we declare that  }
+
+*Step2 : Create a Custom Control( Layout element) on a screen.
+
+*Step3:  Create an Object of the Container class( CL_GUI_CUSTOM_CONTAINER)
+
+*Step4 : Create an Object of the ALV GRID class( CL_GUI_ALV_GRID) and pass the object of container class in the parent parameter.
+
+*Step5 : Use Method :Use ALV GRID class( CL_GUI_ALV_GRID) Method(SET_TABLE_FOR_FIRST_DISPLAY) to display the data.
+
+*&---------------------------------------------------------------------*
+REPORT zgc_fourtyseven_program.
+
+DATA: lv_number TYPE zde_36_std_rnum.
+SELECT-OPTIONS : lv_num FOR lv_number.
+
+TYPES: BEGIN OF st_dt1,
+         s_number       TYPE zde_36_std_rnum,
+         s_name         TYPE  zde_36_std_name,
+         s_branch       TYPE  zde_36_std_branch,
+         s_phone_number TYPE  zde_36_std_pnum,
+       END OF st_dt1,
+
+       BEGIN OF st_dt2,
+         s_enroll_id   TYPE zde_36_std_enroll_id,
+         s_number      TYPE zde_36_std_rnum,
+         s_course_id   TYPE zde_36_std_course_id,
+         s_enroll_date TYPE zde_36_std_enroll_date,
+       END OF st_dt2.
+
+DATA: wa_dt1 TYPE st_dt1,
+      lt_dt1 TYPE TABLE OF st_dt1,
+      wa_dt2 TYPE st_dt2,
+      lt_dt2 TYPE TABLE OF st_dt2.
+
+DATA: wa_fit TYPE zst_36_ct_view,
+      lt_fit TYPE ztt_36_ct_view.
+
+data: lt_fcat type LVC_T_FCAT.                     " This is the tBLE TYPE FOR THE field catalog . this should be declared and give it to the changing  field
+data: lo_cont type ref to CL_GUI_CUSTOM_CONTAINER. " Here we are declaring the object for the container class of 'CL_GUI_CUSTOM_CONTAINER' .
+                                                      " For Declaring the object we use 'TYPE REF TO ' keyword
+data: lo_cgrid type ref to CL_GUI_ALV_GRID.        " Here we are declaring the object for the ALV class
+
+
+START-OF-SELECTION.
+
+  SELECT s_number s_name s_branch s_phone_number
+  FROM zdt_36_std_table INTO TABLE lt_dt1 WHERE s_number IN lv_num.
+
+  IF lt_dt1 IS NOT INITIAL.
+    SELECT s_enroll_id s_number  s_course_id s_enroll_date FROM zdt_36_std_enrol INTO TABLE lt_dt2 FOR ALL ENTRIES IN lt_dt1 WHERE s_number = lt_dt1-s_number.
+  ENDIF.
+
+  LOOP AT lt_dt1 INTO wa_dt1.
+    LOOP AT lt_dt2 INTO wa_dt2 WHERE s_number = wa_dt1-s_number.
+      wa_fit-s_number = wa_dt1-s_number.
+      wa_fit-s_name = wa_dt1-s_name.
+      wa_fit-s_branch = wa_dt1-s_branch.
+      wa_fit-s_enroll_id = wa_dt2-s_enroll_id.
+      wa_fit-s_course_id = wa_dt2-s_course_id.
+      wa_fit-s_enroll_date = wa_dt2-s_enroll_date.
+      APPEND wa_fit TO lt_fit.
+*      CLEAR wa_fit.
+    ENDLOOP.
+  ENDLOOP.
+
+  CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'  "  USE SAP Function Module( LVC_FIELDCATALOG_MERGE) to create a field catalog.
+   EXPORTING
+*     I_BUFFER_ACTIVE              =
+     I_STRUCTURE_NAME             = 'ZST_36_CT_VIEW'  " Here the structure name should give which was created in se11 which is final report structure
+*     I_CLIENT_NEVER_DISPLAY       = 'X'
+*     I_BYPASSING_BUFFER           =
+*     I_INTERNAL_TABNAME           =
+    CHANGING
+      ct_fieldcat                  = lt_fcat         " This is fieldcatalog table type which is avaliable in the ( LVC_FIELDCATALOG_MERGE) in changing tab
+   EXCEPTIONS
+     INCONSISTENT_INTERFACE       = 1
+     PROGRAM_ERROR                = 2
+     OTHERS                       = 3
+            .
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+create OBJECT lo_cont                             "Here we created an Object for the class container .So in class container the INSTANCE CONSTRUCTOR the mandatory field name
+                                                  " should we pass , That is container name
+exporting
+  CONTAINER_NAME = 'CONT'.
+
+create OBJECT LO_CGRID                           "Here we created the object for the class of ALV grid class . here also the INSTANCE CONSTRUCTOR  need to pass the
+                                                  " Field name is 'I_PARENT' and 'LO_CONT' = is object of the container . these are mandatory to pass
+exporting
+  I_PARENT = LO_CONT.
+
+  CALL METHOD lo_cgrid->set_table_for_first_display    " This is the method of to display the final ALV report should display by using 'set_table_for_first_display' method
+*    EXPORTING
+*      i_buffer_active               =
+*      i_bypassing_buffer            =
+*      i_consistency_check           =
+*      i_structure_name              =
+*      is_variant                    =
+*      i_save                        =
+*      i_default                     = 'X'
+*      is_layout                     =
+*      is_print                      =
+*      it_special_groups             =
+*      it_toolbar_excluding          =
+*      it_hyperlink                  =
+*      it_alv_graphics               =
+*      it_except_qinfo               =
+*      ir_salv_adapter               =
+    CHANGING
+      it_outtab                     = LT_FIT
+      it_fieldcatalog               = LT_FCAT
+*      it_sort                       =
+*      it_filter                     =
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      others                        = 4
+          .
+  IF sy-subrc <> 0.
+*   Implement suitable error handling here
+  ENDIF.
+
+
+CALL SCREEN '0100'.                  " This is the screen we create for display the ALV REPORT IN THAT SCREEN . here we should create the mandatory screen
+                                     " The screen number for creation start with 100 and ends with  9999.
+                                     " In this screen. when we double tab the screen number , we create the screen in screen painter . give the name which define above container name  "CONT' THEN AFTER SAVE ,CHECK AND ACTIVATE
+
+" HERE AFTER THE EXECUTE CODE , OUTPUT WILL COME , BUT THE BACK BUTTONS WILL NOT WORK , UNTILL THE WE THE CODE IN ' SCREEN TAB OR MODULE POOL'
+
+INCLUDE zgc_fourtyseven_program_usei01.

@@ -1,0 +1,109 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_SIXTH_PROGRAM
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZGC_SIXTH_PROGRAM.
+* Q)Take Name & Age as input. Age must be ≥ 18 Name must not be empty
+*------------------------------------------------------------------------
+*string operations examples problems
+
+
+DATA: lv_st1 TYPE string,
+      lv_st2 TYPE string,
+      lv_full TYPE string.
+lv_st1 = 'Ganesh'.
+lv_st2 = 'chowdary'.
+
+*CONCATENATE lv_st1 lv_st2 INTO lv_full. " This is also executes , but here we wont get spaces
+CONCATENATE lv_st1 lv_st2 INTO lv_full SEPARATED BY ' '.
+WRITE / lv_full.
+*-------------------------------------
+* split operator
+DATA: lv_s1 TYPE string,
+      lv_s2 TYPE string,
+      "lv_s3 TYPE string, this we can or else remaing all sub strings will come in lv_s2
+      lv_f TYPE string.
+lv_f = 'This is ganesh'.
+
+SPLIT lv_f AT ' ' INTO lv_s1 lv_s2.
+WRITE: / lv_s1,
+      / lv_s2.
+
+*--------------------------------------
+* STRLEN() OPERATOR
+
+PARAMETERS: Name TYPE string OBLIGATORY DEFAULT 'NULL',
+            Age  TYPE I.
+IF Age >= 18.
+  IF STRLEN( Name ) > 3.
+        WRITE: / 'The user Entered name is :',Name.
+  ELSE.
+      WRITE:'You Entered the name has more length'.
+  ENDIF.
+   WRITE / 'You are eligible'.
+ENDIF.
+
+*--------------------------------------
+*TRANSLATE {THIS IS USED TO CONVERSION OF STRING UPPERCASE OR LOWERCASE}
+
+DATA: s1 TYPE string VALUE 'THIS IS A CONVERSION OF UPPERCASE TO LOWERCASE'.
+TRANSLATE s1 TO LOWER CASE.
+WRITE / s1.
+
+*---------------------------------------
+*CONDENSE {this is used to remove extra spaces within , starting , ending of string }
+
+DATA: c1 TYPE string VALUE '   This is    Condense   conformed   string    '.
+CONDENSE c1.
+WRITE / c1.
+*----------------------------------------
+*Replace
+
+DATA: r1 TYPE string VALUE ' Replacing string operation function'.
+REPLACE 'Replacing' IN r1 WITH 'This is new Replacing'.
+WRITE: / R1.
+
+*--------------------------------------------
+*FIND
+
+DATA: f1 TYPE string VALUE 'This string used for finding the sub string in a string'.
+FIND 'stringSD' IN f1.
+IF sy-subrc = 0.
+   WRITE: / 'successfully found the sub-string ',sy-subrc.
+ELSE.
+   WRITE: / ' WE DIDNT GET THE SUB-STRING'.
+ENDIF.
+*--------------------------------------------
+*substring {This is used to return the substring of string }
+
+DATA: v_full TYPE string VALUE 'This is for searching the substring ',
+      srh_name TYPE string.
+*DATA( new_sub_str ) = SUBSTRING( val = v_full off = 5 len = 2 ). " This is not working method
+srh_name = v_full+5(2).
+WRITE: / srh_name .
+      " / new_sub_str.
+*--------------------------------------------------------------------------------------------------------------------------------------------------
+*small overall example
+PARAMETERS p_name TYPE string.
+
+AT SELECTION-SCREEN.
+  CONDENSE p_name.
+  TRANSLATE p_name TO UPPER CASE.
+
+  IF STRLEN( p_name ) < 3.
+    MESSAGE 'Name must have at least 3 characters' TYPE 'E'.
+  ENDIF.
+
+START-OF-SELECTION.
+  WRITE p_name.
+*---------------------------------------------------------------
+" Manual headers + data
+WRITE: / 'EMP_Name', 25 'Mobile_number', 39 'Gmail'.
+WRITE: / sy-uline(85).
+WRITE: / 'Ganesh Chowdary', 25 '9989898909', 39 'ganesh@gmail.com'.
+WRITE: / 'Vasista CITY', 25 '2131232130', 39 'vasista@gmail.com'.
+WRITE: / 'chaitanaya Chowdary', 25 '4566545466', 39 'chaitnaya@gmail.com'.
+WRITE: / 'gundu mohan', 25 '9090909123', 39 'guntu@gmail.com'.
+WRITE: / 'Ganesh Chowdary', 25 '9989898909', 39 'ganesh@gmail.com'.
+*------------------------------------------------------------------------------

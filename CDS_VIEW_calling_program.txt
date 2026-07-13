@@ -1,0 +1,49 @@
+*&---------------------------------------------------------------------*
+*& Report ZGC_CDS_VIEW_IN_ECLLIPSE
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT ZGC_CDS_VIEW_IN_ECLLIPSE.
+
+*
+*SELECT * from zgc_eclipse_cds_view1 into table @data(lt_data).
+*
+**loop at lt_data into data(wa_data).
+**  wa_data-
+**  endloop.
+*
+*  CALL METHOD cl_demo_output=>display  "cl_demo_output is the class  with static display method where we can direclt pass the data so data will display in the grid format
+*    EXPORTING
+*      data   = lt_data
+*      .
+
+*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+" CDS view with parameter
+
+*parameters:p_solo type vbeln_va.
+*
+*select * from zcds_view_with_parameter( p_vbeln = @p_solo ) into table @data(lt_data). " P_vbeln is the parameter we declare in the cds view
+*
+*  CALL METHOD cl_demo_output=>display  "cl_demo_output is the class  with static display method where we can direclt pass the data so data will display in the grid format
+*    EXPORTING
+*      data   = lt_data
+      .
+
+*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+" The Nested CDS view . passing the cds view as a table name to another CDS view and with join of another table
+
+*select * from ZCDS_NESTED_VIEW into table @data(lt_data). " P_vbeln is the parameter we declare in the cds view
+*
+*  CALL METHOD cl_demo_output=>display  "cl_demo_output is the class  with static display method where we can direclt pass the data so data will display in the grid format
+*    EXPORTING
+*      data   = lt_data
+*      .
+*-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+" UNION OPERATION WILL PERFORMED AND ACCESS THROUGH THE THIS PROGRAM
+
+SELECT * FROM ZCD_UNION_OPERATION INTO TABLE @DATA(LT_DATA) ORDER BY NUMB.  " Here orderby will make the data in order by with that colum. by default in increasing order
+
+  CALL METHOD cl_demo_output=>display  "cl_demo_output is the class  with static display method where we can direclt pass the data so data will display in the grid format
+    EXPORTING
+      data   = lt_data.
