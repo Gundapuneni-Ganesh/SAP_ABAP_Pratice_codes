@@ -1,0 +1,256 @@
+*&---------------------------------------------------------------------*
+*& Report ZAGRI_REQUEST_PAGE
+*&---------------------------------------------------------------------*
+*&  Screen To Screen Navigation code 
+*&---------------------------------------------------------------------*
+REPORT zagri_request_page.
+TABLES: sscrfields.
+
+SELECTION-SCREEN BEGIN OF BLOCK agri_request WITH FRAME TITLE TEXT-000.
+
+SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS: p_req1 RADIOBUTTON GROUP a1 DEFAULT 'X'.
+SELECTION-SCREEN COMMENT 4(32) text_01 FOR FIELD p_req1.
+SELECTION-SCREEN PUSHBUTTON 40(12) btn_01 USER-COMMAND cmd_req.
+SELECTION-SCREEN END OF LINE.
+
+SELECTION-SCREEN SKIP 1.
+
+SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS: p_req2 RADIOBUTTON GROUP a1.
+SELECTION-SCREEN COMMENT 4(32) text_02 FOR FIELD p_req2.
+SELECTION-SCREEN PUSHBUTTON 40(25) btn_02 USER-COMMAND cmd_rep.
+SELECTION-SCREEN END OF LINE.
+
+SELECTION-SCREEN SKIP 1.
+
+SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS: p_req3 RADIOBUTTON GROUP a1.
+SELECTION-SCREEN COMMENT 4(32) text_03 FOR FIELD p_req3.
+SELECTION-SCREEN PUSHBUTTON 40(25) btn_03 USER-COMMAND cmd_off.
+SELECTION-SCREEN END OF LINE.
+
+SELECTION-SCREEN SKIP 1.
+
+SELECTION-SCREEN BEGIN OF LINE.
+PARAMETERS: p_req4 RADIOBUTTON GROUP a1.
+SELECTION-SCREEN COMMENT 4(32) text_04 FOR FIELD p_req4.
+SELECTION-SCREEN PUSHBUTTON 40(25) btn_04 USER-COMMAND cmd_cus.
+SELECTION-SCREEN END OF LINE.
+
+SELECTION-SCREEN END OF BLOCK agri_request.
+
+SELECTION-SCREEN BEGIN OF SCREEN 1150.
+*---------------------------------------------------------------------------------------------------------
+"BUTTONS CREATION FOR USER DASHBOARD.
+*---------------------------------------------------------------------------------------------------------
+SELECTION-SCREEN BEGIN OF BLOCK a1 WITH FRAME TITLE TEXT-000.
+SELECTION-SCREEN PUSHBUTTON /20(18) btn5 USER-COMMAND cmd1.
+SELECTION-SCREEN PUSHBUTTON 42(18)  btn6 USER-COMMAND cmd2.
+SELECTION-SCREEN END OF BLOCK a1.
+SELECTION-SCREEN END OF SCREEN 1150.
+
+*---------------------------------------------------------------------------------------------------------
+"SCREEN FOR NEW USER REGISTRATION.
+*---------------------------------------------------------------------------------------------------------
+SELECTION-SCREEN BEGIN OF SCREEN 1100 AS WINDOW TITLE title1.             " This is the screen to with in one program calling by using the windows 
+SELECTION-SCREEN BEGIN OF BLOCK b_new WITH FRAME TITLE text_b1.
+PARAMETERS: p_uid    TYPE zagri_farmer-farmer_id MODIF ID dis,
+            pf_uname TYPE zagri_de_fname OBLIGATORY,
+            pl_uname TYPE zagri_de_lname OBLIGATORY,
+            village  TYPE zagri_de_vill,
+            distr    TYPE zagri_de_dist,
+            conta    TYPE zagri_de_cont,
+            reg_date TYPE zagri_de_date,
+            reg_time TYPE zagri_de_time,
+            crea     TYPE uname.
+SELECTION-SCREEN END OF BLOCK b_new.
+SELECTION-SCREEN PUSHBUTTON /26(30) btn7 USER-COMMAND cmd4.
+SELECTION-SCREEN END OF SCREEN 1100.
+*---------------------------------------------------------------------------------------------------------
+"SCREEN FOR ALREADY EXISTING USER DATA CHECK.
+*---------------------------------------------------------------------------------------------------------
+SELECTION-SCREEN BEGIN OF SCREEN 1200 AS WINDOW TITLE title2.
+SELECTION-SCREEN BEGIN OF BLOCK b_farmer WITH FRAME TITLE text_b2.
+PARAMETERS: p_fcode  TYPE zagri_de_fid,
+            pf_fname TYPE zagri_de_fname,
+            pl_fname TYPE zagri_de_lname.
+SELECTION-SCREEN END OF BLOCK b_farmer.
+SELECTION-SCREEN PUSHBUTTON /26(30) btn8 USER-COMMAND cmd5.
+SELECTION-SCREEN END OF SCREEN 1200.
+
+DATA : lt_new_r TYPE TABLE OF zagri_farmer1,
+       ls_new_r TYPE zagri_farmer1,
+       gv_submit TYPE abap_bool.
+
+
+
+INITIALIZATION.
+  text_01 = 'REQUEST FOR THE FIELD TEST'.
+  text_02 = 'FINAL REPORT OF THE TEST'.
+  text_03 = 'OFFICER STATUS'.
+  text_04 = 'CUSTOMER DETAILS'.
+
+  title1  = 'New User Registration'.
+  text_b1 = 'Enter Farmer Details'.
+  title2  = 'Existing User Check'.
+  text_b2 = 'Search Farmer'.
+
+  btn_01  = 'REQUEST'.
+  btn_02  = 'CHECK REPORT'.
+  btn_03  = 'CHECK STATUS'.
+  btn_04  = 'CHECK CUSTOMER DETAILS'.
+
+  btn5    = 'NEW USER'.
+  btn6    = 'EXISTING USER'.
+  btn7 = 'SUBMIT NEW REGISTER'.
+  btn8 = 'CHECK FOR EXISTING USER'.
+  reg_date = sy-datum.
+  reg_time = sy-timlo.
+
+
+AT SELECTION-SCREEN OUTPUT.
+  IF sy-dynnr = '1100'. " OR sy-dynnr = '1300'.
+    LOOP AT SCREEN.
+      IF screen-group1 = 'DIS'.
+        screen-input = '0'. " Display only
+        MODIFY SCREEN.
+      ENDIF.
+    ENDLOOP.
+  ENDIF.
+
+AT SELECTION-SCREEN.
+  CASE sscrfields-ucomm.
+    WHEN 'CMD_REQ'.
+      IF p_req1 <> abap_true.
+        MESSAGE 'Please select the "REQUEST FOR THE FIELD TEST" radio button first.' TYPE 'I'.
+      ELSE.
+        CALL SELECTION-SCREEN 1150.                                                              " Here is Calling the screen by screen number so full window will open 
+      ENDIF.
+
+    WHEN 'CMD1'.
+      DATA: lv_last_id TYPE zagri_farmer1-farmer_id,
+            lv_num     TYPE n LENGTH 7.
+
+      CLEAR: lv_last_id, lv_num, p_uid.
+
+      SELECT MAX( farmer_id ) FROM zagri_farmer1 INTO lv_last_id.
+
+      IF lv_last_id IS INITIAL.
+        p_uid = 'FAR0000001'.
+      ELSE.
+        lv_num = lv_last_id+3(7).
+        lv_num = lv_num + 1.
+        p_uid  = |FAR{ lv_num }|.
+      ENDIF.
+      CALL SELECTION-SCREEN 1100 STARTING AT 10 5.
+      IF gv_submit = abap_true.
+        LEAVE TO SCREEN 0.
+        endif.
+
+    WHEN 'CMD2'.
+      CALL SELECTION-SCREEN 1200 STARTING AT 10 5.                                     " Here is Calling the screen by screen number so Dialog window will open  by specifying the length of 
+      IF gv_submit = abap_true.                                                        " with STARTING AT lengths of top and left and ENDING AT lengths of Botton right .
+        LEAVE TO SCREEN 0.
+      ENDIF.
+
+    WHEN 'CMD4'.
+      CLEAR ls_new_r.
+      ls_new_r-farmer_id  = p_uid.
+      ls_new_r-first_name     = pf_uname.
+      ls_new_r-last_name      = pl_uname.
+      ls_new_r-village    = village.
+      ls_new_r-distrinct   = distr.
+      ls_new_r-contact_no = conta.
+      ls_new_r-reg_date   = reg_date.
+      ls_new_r-reg_time   = reg_time.
+      ls_new_r-created_by = crea.
+      MODIFY zagri_farmer1 FROM @ls_new_r.
+
+      IF sy-subrc = 0.
+        MESSAGE 'DATA TRANSFERED TO DB TABLE' TYPE 'I'.
+        gv_submit = abap_true.
+        LEAVE TO SCREEN 0.
+
+      ELSE.
+        MESSAGE 'DATA DOESNT SENT TO DB TABLE' TYPE 'I'.
+      ENDIF.
+
+
+    WHEN 'CMD5'.                                           "BUTTON SUBMIT FOR CHECKING EXISTING USER FOUND.
+      CLEAR ls_new_r.
+      IF p_fcode IS NOT INITIAL.
+        " Search by Farmer ID
+        SELECT SINGLE *
+          FROM zagri_farmer1
+          WHERE farmer_id = @p_fcode
+          INTO @ls_new_r.
+
+        IF sy-subrc = 0.
+          pf_fname = ls_new_r-first_name.
+          pl_fname = ls_new_r-last_name.
+          MESSAGE |Loaded details for Farmer Code: { p_fcode }| TYPE 'S'.
+          gv_submit = abap_true.
+        LEAVE TO SCREEN 0.
+        ELSE.
+          MESSAGE |Farmer Code: { p_fcode } not found.| TYPE 'E'.
+        ENDIF.
+
+      ELSEIF pf_fname IS NOT INITIAL.
+        " Search by First Name
+        SELECT SINGLE *
+          FROM zagri_farmer1
+          WHERE first_name = @pf_fname
+          INTO @ls_new_r.
+
+        IF sy-subrc = 0.
+          p_fcode  = ls_new_r-farmer_id.
+          pl_fname = ls_new_r-last_name.
+          MESSAGE |Loaded details for Farmer: { pf_fname }| TYPE 'S'.
+          gv_submit = abap_true.
+        LEAVE TO SCREEN 0.
+
+        ELSE.
+          MESSAGE |Farmer Name: { pf_fname } not found.| TYPE 'E'.
+        ENDIF.
+
+      ELSE.
+        MESSAGE 'Please provide either a Farmer Code or First Name.' TYPE 'I'.
+      ENDIF.
+
+      WHEN 'CMD_OFF'.
+      IF p_req3 <> abap_true.
+        MESSAGE 'Please select the "OFFICER STATUS" radio button first.' TYPE 'I'.
+      ELSE.
+        SUBMIT zagri_off_assign_alv VIA SELECTION-SCREEN AND RETURN.                      " This is another method for screen navigation , writing the code in another program 
+      ENDIF.
+
+      when 'CMD_REP'.
+        IF p_req2 <> abap_true.
+        MESSAGE 'Please select the "FINAL REPORT OF THE TEST" radio button first.' TYPE 'I'.
+      ELSE.
+        SUBMIT ZTEST_REPORT_058 VIA SELECTION-SCREEN AND RETURN.
+      ENDIF.
+
+
+  ENDCASE.
+
+  IF gv_submit = abap_true AND sy-dynnr = '1000'.
+    CLEAR gv_submit.
+
+    SUBMIT zagri_req_field_test                      " This is another method for screen navigation , writing the code in another program and passing the values to the resultant fields 
+      WITH f_id   = ls_new_r-farmer_id               " Where F_id is the resultant screen field and LS_NEW_R-FARMER_ID is present screen field.
+      WITH f_name = ls_new_r-first_name              " VIA SELECTION SCREEN is "When executing the submitted report, show its selection screen."
+      WITH s_name = ls_new_r-last_name               " AND RETURN  After the submitted report finishes execution, return to the calling program.
+      WITH distr  = ls_new_r-distrinct
+      WITH mob_no = ls_new_r-contact_no
+      VIA SELECTION-SCREEN AND RETURN.
+  ENDIF.
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SUBMIT → Execute another report
+VIA SELECTION-SCREEN → Show its selection screen
+WITH → Pass values
+AND RETURN → Come back to calling program
+_________________________________________________________________________________________________________________________________________________________________________
