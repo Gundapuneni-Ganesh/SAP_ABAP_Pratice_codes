@@ -1,0 +1,63 @@
+ " Maps login redirecting the code 
+
+
+SELECTION-SCREEN BEGIN OF LINE.
+  SELECTION-SCREEN COMMENT 1(15) TEXT-001.
+  PARAMETERS: p_wareid TYPE zwareid AS LISTBOX VISIBLE LENGTH 20.
+
+
+  SELECTION-SCREEN PUSHBUTTON 45(15) gv_btn USER-COMMAND show_gps.
+SELECTION-SCREEN END OF LINE.
+
+
+DATA: lo_docking TYPE REF TO cl_gui_docking_container,
+      lo_html    TYPE REF TO cl_gui_html_viewer,
+       lv_url TYPE c LENGTH 250,
+
+      lv_gps     TYPE string.
+
+INITIALIZATION.
+  gv_btn = 'Show on Map'.
+
+
+
+AT SELECTION-SCREEN.
+  IF sy-ucomm = 'SHOW_GPS'.
+
+    DATA: lv_lat TYPE f,
+          lv_lon TYPE f,
+          lv_l1  TYPE string, lv_l2 TYPE string,
+          lv_r1  TYPE string, lv_r2 TYPE string.
+
+
+    CASE p_wareid.
+      WHEN 'AP001'. lv_lat = '15.9129'. lv_lon = '79.7400'.
+      WHEN 'UP002'. lv_lat = '26.8467'. lv_lon = '80.9462'.
+      WHEN 'MH003'. lv_lat = '19.7507'. lv_lon = '75.7139'.
+      WHEN 'KA004'. lv_lat = '15.3173'. lv_lon = '75.7139'.
+      WHEN 'WB005'. lv_lat = '22.9868'. lv_lon = '87.8550'.
+      WHEN OTHERS.  lv_lat = '28.6139'. lv_lon = '77.2090'.
+    ENDCASE.
+
+
+    lv_l1 = |{ lv_lon - '0.5' }|.
+    lv_l2 = |{ lv_lat - '0.5' }|.
+    lv_r1 = |{ lv_lon + '0.5' }|.
+    lv_r2 = |{ lv_lat + '0.5' }|.
+
+
+    lv_url = |https://www.openstreetmap.org/export/embed.html?bbox={ lv_l1 },{ lv_l2 },{ lv_r1 },{ lv_r2 }&layer=mapnik&marker={ lv_lat },{ lv_lon }|.
+
+
+    IF lo_docking IS INITIAL.
+      CREATE OBJECT lo_docking
+        EXPORTING
+          side      = cl_gui_docking_container=>dock_at_bottom
+          extension = 250.
+      CREATE OBJECT lo_html
+        EXPORTING
+          parent = lo_docking.
+    ENDIF.
+
+    lo_html->show_url( url = lv_url ).
+  ENDIF.
