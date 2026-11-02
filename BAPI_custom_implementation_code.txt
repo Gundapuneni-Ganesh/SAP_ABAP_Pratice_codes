@@ -1,0 +1,247 @@
+
+REPORT ZGC_BAPI_EXTENSION_ADD_FIELDS.
+
+*&----------------------------------------------------------------------------------------------------------------------------------------------------------------------*
+* Here is the sample data for this code . { copy paste in NOTEPAD and save it , then upload and upload Through this code }
+
+"   PMAT_121  M FERT  Material1 EA
+"   PMAT_121  M FERT  Material2 EA
+"   PMAT_122  M FERT  Material3 EA
+"   PMAT_123  M HAWA  Material4 EA
+"   PMAT_124  M HAWA  Material5 EA
+
+* the above data is for the without additional fields
+*--------------------------------------
+* This is the addition of field  in the MARA Table and stores in Database table
+* { for adding the data to DB Table , we need to add that fields in Respective Table like here we need to add in MARA Table }
+
+"   PMAT_121  M FERT  Material1 EA  GC1
+"   PMAT_121  M FERT  Material2 EA  GC2
+"   PMAT_122  M FERT  Material3 EA  GC3
+"   PMAT_123  M HAWA  Material4 EA  GC4
+"   PMAT_124  M HAWA  Material5 EA  GC5
+
+*&------------------------------------------------------------------------------------------------------------------------------------------------------------------------*
+
+PARAMETERS: lv_path TYPE localfile.      " parameter for taking the input and LOCALFILE is DATA_ELEMENT of taking path in character format
+
+types: BEGIN OF str,
+        matnr TYPE matnr,           "Material Number
+        mbrsh TYPE mbrsh,           "Industry Sector
+        mtart TYPE mtart,           "Material type
+        maktx TYPE maktx,           "Description
+*         MATKL TYPE MARA-MATKL,         "Material Group
+        meins TYPE meins,           "Base Unit of Measurement
+        name type zgc_emp_name,
+      END OF str.
+
+DATA: wa_st TYPE str,
+      lt_st TYPE TABLE OF str.
+
+" -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+DATA: lt_st_2  TYPE bapimathead ,      " tHIS IS FOR THE MATERIAL FIRST SCREEN DETAILS STRUCTURE OF Material Number , Industry Sector , Material Type
+
+      lt_st_3  TYPE bapi_makt,         " This workarea and Internal table for the material description . such that this is avaliable in the TABLE tab in Function module
+      lt_table TYPE TABLE OF bapi_makt.
+
+data: ls_mara type bapi_mara,          " MATERIAL QUANTITY TYPE INTO TABLE
+      ls_marax type bapi_marax.        " TO IMPLEMENT THESE CHANGES INTO TABLE
+
+DATA : ls_ret TYPE bapiret2,           "WORK AREA OF THE RETURN MESSAGE.
+       lt_ret TYPE TABLE OF bapiret2.  "TABLE FOR THE RETURN STATEMENT MESSAGE.
+
+*-----------------------------------------------------------------------------------------------------
+
+" This is structure where we want to add the new fields data which is unavaliable in database table and this BAPI FM . so we can add in the EXTENSION and EXTENSIONX field type is BAPIPAREX
+" When ever There is extension of 'x' is came  , it means is commitment of that field , that we need to declare and assign seperately
+
+* With this workarea and Internal table  only we insert our custom fields.
+
+DATA : add_str  TYPE bapiparex,              "WORK AREA FOR EXTENSIONIN.
+      add_tab  TYPE TABLE OF bapiparex.      "Internal table  FOR EXTENSIONIN.
+
+DATA : addx_str  TYPE bapiparexx,            "WORK AREA FOR EXTENSIONINX.
+      addx_tab  TYPE TABLE OF bapiparexx.    "Internal table  FOR EXTENSIONINX.
+
+"--------------------------------------------------------------------
+
+* These are structures for that where the data need to be stored . so that in this structures we add the fields by APPEND method in those structures only
+
+* { in BAPI_TE_MARA Structure you will add the field with respect to data type and In BAPI_TE_MARAX Structure you will add the field but change the data Element of CHAR1
+* Because the confirmation , we need the single character only , pass always char1 datatype to this structure .}
+
+DATA : ls_te  TYPE bapi_te_mara,    " This is for the material adding
+       ls_tex TYPE bapi_te_marax.   " This is for the material confirmation to save the data
+
+
+
+"-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+data : lv_file TYPE string.
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR lv_path.
+
+  CALL FUNCTION 'F4_FILENAME'           " This FM for  taking  data from our local system . and returns path of file  which take in datatype of character
+    EXPORTING
+      program_name  = syst-cprog
+      dynpro_number = syst-dynnr
+      field_name    = ' '
+    IMPORTING
+      file_name     = lv_path.
+
+  lv_file = lv_path.                   " Here the path should be convert into string , because below tha path taking in string format , thats why we convert that and we pass that variable .
+
+  CALL FUNCTION 'GUI_UPLOAD'           " This is FM is used for reading the data from our file and convert into appropiate format and sends to internal table which we define in locally .
+    EXPORTING
+      filename            = lv_file    " here file we should pass
+*     FILETYPE            = 'ASC'
+      has_field_separator = 'X'        " here the seperator should pass . to identify by which parameter text  and seperate
+*     HEADER_LENGTH       = 0
+*     READ_BY_LINE        = 'X'
+*     DAT_MODE            = ' '
+*     CODEPAGE            = ' '
+*     IGNORE_CERR         = ABAP_TRUE
+*     REPLACEMENT         = '#'
+*     CHECK_BOM           = ' '
+*     VIRUS_SCAN_PROFILE  =
+*     NO_AUTH_CHECK       = ' '
+*   IMPORTING
+*     FILELENGTH          =
+*     HEADER              =
+    TABLES
+      data_tab            = lt_st     " here in this internal tables tab the data will store . this FM will return
+*   CHANGING
+*     ISSCANPERFORMED     = ' '
+   EXCEPTIONS
+     FILE_OPEN_ERROR     = 1
+     FILE_READ_ERROR     = 2
+     NO_BATCH            = 3
+     GUI_REFUSE_FILETRANSFER       = 4
+     INVALID_TYPE        = 5
+     NO_AUTHORITY        = 6
+     UNKNOWN_ERROR       = 7
+     BAD_DATA_FORMAT     = 8
+     HEADER_NOT_ALLOWED  = 9
+     SEPARATOR_NOT_ALLOWED         = 10
+     HEADER_TOO_LONG     = 11
+     UNKNOWN_DP_ERROR    = 12
+     ACCESS_DENIED       = 13
+     DP_OUT_OF_MEMORY    = 14
+     DISK_FULL           = 15
+     DP_TIMEOUT          = 16
+     OTHERS              = 17
+    .
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+  "-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  LOOP AT lt_st INTO wa_st.
+
+     clear : lt_st_2 , ls_mara , ls_marax , lt_st_3 , ls_ret .   " This is clearing the record from workarea . Because it should not re-repeat the same record again and again.
+     refresh : lt_table.
+
+
+    lt_st_2-material = wa_st-matnr.          "DEFINITION FOR MATERIAL NUMBER , INDUSTRY TYPE , MATERIAL TYPE , VIEW INTO TABLES.
+    lt_st_2-ind_sector = wa_st-mbrsh.
+    lt_st_2-matl_type = wa_st-mtart.
+    lt_st_2-basic_view = 'X'.
+
+    ls_mara-base_uom = wa_st-meins.          " This is for the material quantity of KG.. like that
+    ls_marax-base_uom = 'x'.                  " This is for the commitment for that quantity field
+
+    CLEAR lt_st_3.                             " This is for every record should be refresh from workarea . should not be repeat again
+    lt_st_3-langu = sy-langu.                 " Here for Passing the description we need to pass the language field  aslo . it is mandatory to define which type of language
+    lt_st_3-matl_desc = wa_st-maktx.
+    APPEND lt_st_3 TO lt_table.               " Here that each record append to internal table , we define on top that internal table we pass to function module in TABLES tab.
+
+* Here we adding the data to the structure for the the EXTENSION & EXTENSIONX field structures  in BAPI FM of TABLES tab
+    ls_te-material = wa_st-matnr.           " here we need to write the MATNR field  to identify the record to be stored per particular record in that MARA Table
+    ls_te-GCNAME = wa_st-name.              " This is field we create in this structure and Mara Table
+
+
+    ls_tex-material = wa_st-MATNR.         " These two are confirmation for the above  fields  . Here also we need to define the material number to idenfify the unique record
+    ls_tex-gcname = 'X'.
+
+
+    add_str-structure = 'BAPI_TE_MARA'.    " This is structure(add_str) for the EXTENSION type . so here, in  main structure we should pass the Structure name that we added field ST
+    add_str-valuepart1 = ls_te.            " here we will pass the structure name
+    APPEND add_str TO add_tab.
+
+    CLEAR add_str.
+
+    addx_str-structure = 'BAPI_TE_MARAX'.  " This is for the confirmation
+    addx_str-valuepart1 = ls_tex.
+    APPEND addx_str TO addx_tab.
+
+    CLEAR addx_str.
+
+
+
+    CALL FUNCTION 'BAPI_MATERIAL_SAVEDATA'    " In EXPORTING and IMPORTING tabs  , we pass values through the workarea  , AND in TABLES tab we pass through in Internal Table format
+      EXPORTING
+        headdata            = lt_st_2         "In this ST this fields  MATERIAL NUMBER , INDUSTRY TYPE , MATERIAL TYPE , are avaliable
+       CLIENTDATA          =  ls_mara         " In this ST for the fields of unit of measurements like  KG...etc
+       CLIENTDATAX         =  ls_marax        " This is the commitment of that fields which we define above field . WHen we commit , Then only the data fully is assigned and saved
+*       PLANTDATA           =
+*       PLANTDATAX          =
+*       FORECASTPARAMETERS  =
+*       FORECASTPARAMETERSX =
+*       PLANNINGDATA        =
+*       PLANNINGDATAX       =
+*       STORAGELOCATIONDATA =
+*       STORAGELOCATIONDATAX        =
+*       VALUATIONDATA       =
+*       VALUATIONDATAX      =
+*       WAREHOUSENUMBERDATA =
+*       WAREHOUSENUMBERDATAX        =
+*       SALESDATA           =
+*       SALESDATAX          =
+*       STORAGETYPEDATA     =
+*       STORAGETYPEDATAX    =
+*       FLAG_ONLINE         = ' '
+*       FLAG_CAD_CALL       = ' '
+*       NO_DEQUEUE          = ' '
+*       NO_ROLLBACK_WORK    = ' '
+*       CLIENTDATACWM       =
+*       CLIENTDATACWMX      =
+*       VALUATIONDATACWM    =
+*       VALUATIONDATACWMX   =
+     IMPORTING
+       RETURN              =  ls_ret     " Here we should mandatory to define this RETURN structure Locally and that should assign here, Because the message will return in there format
+      TABLES
+        materialdescription = lt_table   " In this Description fields are avaliable
+*       UNITSOFMEASURE      =
+*       UNITSOFMEASUREX     =
+*       INTERNATIONALARTNOS =
+*       MATERIALLONGTEXT    =
+*       TAXCLASSIFICATIONS  =
+*       RETURNMESSAGES      =
+*       PRTDATA             =
+*       PRTDATAX            =
+       EXTENSIONIN         =  add_tab  " Here we are passing the workarea to the EXTENSION FIELD TABLE , that workarea is the type of structure in that field added structure
+       EXTENSIONINX        =  addx_tab   " this is the confirmation for adding the fields in structure
+*       UNITSOFMEASURECWM   =
+*       UNITSOFMEASURECWMX  =
+*       SEGMRPGENERALDATA   =
+*       SEGMRPGENERALDATAX  =
+*       SEGMRPQUANTITYDATA  =
+*       SEGMRPQUANTITYDATAX =
+*       SEGVALUATIONTYPE    =
+*       SEGVALUATIONTYPEX   =
+*       SEGSALESSTATUS      =
+*       SEGSALESSTATUSX     =
+*       SEGWEIGHTVOLUME     =
+*       SEGWEIGHTVOLUMEX    =
+*       NFMCHARGEWEIGHTS    =
+*       NFMCHARGEWEIGHTSX   =
+*       NFMSTRUCTURALWEIGHTS        =
+*       NFMSTRUCTURALWEIGHTSX       =
+      .
+ append ls_ret to lt_ret.              " Here we are passing the all messsage to internal table
+  ENDLOOP.
+  refresh: add_tab , addx_tab.
+"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  " This is CL_DEMO_OUTPUT is Class and DISPLAY is method for which we can display the output in AVL format .
+
+  cl_demo_output=>display( lt_st ).   " THis for the internal table which we import the data from our local system
+  cl_demo_output=>display( lt_ret ).   " This is for error message for displaying for the internal table
