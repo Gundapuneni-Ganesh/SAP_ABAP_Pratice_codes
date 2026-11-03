@@ -1,0 +1,229 @@
+report ZGC_BDC_CONVERSION
+       no standard page heading line-size 255.
+*--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+** Include bdcrecx1_s:                                                             " This is comments we get after screen recording . so we dont need any use
+** The call transaction using is called WITH AUTHORITY-CHECK!
+** If you have own auth.-checks you can use include bdcrecx1 instead.
+*include bdcrecx1_s.
+*
+*parameters: dataset(132) lower case.
+****    DO NOT CHANGE - the generated data section - DO NOT CHANGE    ***
+**
+**   If it is nessesary to change the data section use the rules:
+**   1.) Each definition of a field exists of two lines
+**   2.) The first line shows exactly the comment
+**       '* data element: ' followed with the data element
+**       which describes the field.
+**       If you don't have a data element use the
+**       comment without a data element name
+**   3.) The second line shows the fieldname of the
+**       structure, the fieldname must consist of
+**       a fieldname and optional the character '_' and
+**       three numbers and the field length in brackets
+**   4.) Each field must be type C.
+**
+**** Generated data section with specific formatting - DO NOT CHANGE  ***
+data: begin of record,
+* data element:
+        VIEWNAME_001(030),
+* data element: VIM_LTD_NO
+        LTD_DTA_NO_002(001),
+* data element: ZRM_USERNAME
+        USERNAME_01_003(010),
+* data element: ZRM_PASSWORD
+        PASSWORD_01_004(006),
+* data element: ZRM_ROLE
+        ROLE_01_005(010),
+* data element: ZRM_STATUS
+        STATUS_01_006(001),
+      end of record.
+
+*** End generated data section ***
+
+*start-of-selection.
+*
+*perform open_dataset using dataset.
+*perform open_group.
+*-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*include bdcrecx1_s. " This is the include we get the subroutine standard code . and we copy that and we implement with  respect to it . This is avlaliable after screen recording in program ,
+*                       so there we copied and pasted here.
+
+PARAMETERS : lv_path type localfile.
+data: lv_file type string,
+      L_MSTRING type string.
+
+*------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+types: begin of st_data,
+          username TYPE zrm_username,
+          password TYPE zrm_password,
+          role     TYPE zrm_role,
+          status   TYPE zrm_status,
+  end of st_data.
+
+DATA: LT_DATA TYPE table of st_data,
+      wa_data type st_data.
+
+DATA:   wa_BDCDATA type BDCDATA,                  " This is the structures we take from the INCLUDE program and we define the internal table with that structure
+        it_bdcdata type table of bdcdata.
+
+DATA:   wa_MESSTAB type BDCMSGCOLL,               " This is the structures we take from the INCLUDE program and we define the internal table with that structure
+       it_messtab type table of  BDCMSGCOLL.      " so in this internal table all error or success will get store.
+*------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+at SELECTION-SCREEN on VALUE-REQUEST FOR lv_path.
+  CALL FUNCTION 'F4_FILENAME'
+   EXPORTING
+     PROGRAM_NAME        = SYST-CPROG
+     DYNPRO_NUMBER       = SYST-DYNNR
+     FIELD_NAME          = ' '
+   IMPORTING
+     FILE_NAME           = lv_path
+            .
+  lv_file = lv_path.
+
+CALL FUNCTION 'GUI_UPLOAD'
+  EXPORTING
+    filename                      =  lv_file
+*   FILETYPE                      = 'ASC'
+   HAS_FIELD_SEPARATOR           = 'X'
+*   HEADER_LENGTH                 = 0
+*   READ_BY_LINE                  = 'X'
+*   DAT_MODE                      = ' '
+*   CODEPAGE                      = ' '
+*   IGNORE_CERR                   = ABAP_TRUE
+*   REPLACEMENT                   = '#'
+*   CHECK_BOM                     = ' '
+*   VIRUS_SCAN_PROFILE            =
+*   NO_AUTH_CHECK                 = ' '
+* IMPORTING
+*   FILELENGTH                    =
+*   HEADER                        =
+  tables
+    data_tab                      = lt_data
+* CHANGING
+*   ISSCANPERFORMED               = ' '
+ EXCEPTIONS
+   FILE_OPEN_ERROR               = 1
+   FILE_READ_ERROR               = 2
+   NO_BATCH                      = 3
+   GUI_REFUSE_FILETRANSFER       = 4
+   INVALID_TYPE                  = 5
+   NO_AUTHORITY                  = 6
+   UNKNOWN_ERROR                 = 7
+   BAD_DATA_FORMAT               = 8
+   HEADER_NOT_ALLOWED            = 9
+   SEPARATOR_NOT_ALLOWED         = 10
+   HEADER_TOO_LONG               = 11
+   UNKNOWN_DP_ERROR              = 12
+   ACCESS_DENIED                 = 13
+   DP_OUT_OF_MEMORY              = 14
+   DISK_FULL                     = 15
+   DP_TIMEOUT                    = 16
+   OTHERS                        = 17
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+*------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+loop at lt_data into wa_data.
+
+"---------------------------------------------
+*do.                                            These code will come from screen recording . so that we should keep in comments or we can remove it
+*
+*read dataset dataset into record.
+*if sy-subrc <> 0. exit. endif.
+"--------------------------------------------
+
+* This is the recorded code we keep in the internal table . so we pass the parameters with attachment to the workarea . that assign to the respective subroutine code
+
+perform bdc_dynpro      using 'SAPMSVMA' '0100'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'VIEWNAME'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '=UPD'.
+perform bdc_field       using 'VIEWNAME'
+                              'ZRM_LOGIN'.
+perform bdc_field       using 'VIMDYNFLDS-LTD_DTA_NO'
+                              record-LTD_DTA_NO_002.
+perform bdc_dynpro      using 'SAPLZRM_LOGIN' '0001'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'ZRM_LOGIN-PASSWORD(01)'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '=NEWL'.
+perform bdc_dynpro      using 'SAPLZRM_LOGIN' '0001'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'ZRM_LOGIN-STATUS(01)'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '=SAVE'.
+perform bdc_field       using 'ZRM_LOGIN-USERNAME(01)'  " HERE While recording with respect to field name the assigning will be visible . so here we assign with workarea-fieldname
+                              wa_data-USERNAME.
+perform bdc_field       using 'ZRM_LOGIN-PASSWORD(01)'
+                              wa_data-PASSWORD.        " HERE While recording with respect to field name the assigning will be visible . so here we assign with workarea-fieldname
+perform bdc_field       using 'ZRM_LOGIN-ROLE(01)'
+                              wa_data-ROLE.           " HERE While recording with respect to field name the assigning will be visible . so here we assign with workarea-fieldname
+perform bdc_field       using 'ZRM_LOGIN-STATUS(01)'
+                              wa_data-STATUS.        " HERE While recording with respect to field name the assigning will be visible . so here we assign with workarea-fieldname
+perform bdc_dynpro      using 'SAPLZRM_LOGIN' '0001'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'ZRM_LOGIN-USERNAME(02)'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '=BACK'.
+perform bdc_dynpro      using 'SAPLZRM_LOGIN' '0001'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'ZRM_LOGIN-USERNAME(02)'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '=BACK'.
+perform bdc_dynpro      using 'SAPMSVMA' '0100'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '/EBACK'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'VIEWNAME'.
+*----------------------------------------------
+*perform bdc_transaction using 'SM30'.
+*enddo.                                                         " This is all the standard code which generated while after generated screen recorded code
+*
+*perform close_group.
+*perform close_dataset using dataset.
+*---------------------------------------------
+
+call TRANSACTION 'SM30' USING IT_BDCDATA MODE 'N' UPDATE 'A' MESSAGES INTO  it_messtab.   " This is one of the method in BDC is CALL TRANSACTION
+
+
+        LOOP AT it_MESSTAB into wa_messtab.          " This Message internal table , we store message format fields { in this we store success or fail or any other type of errors  is it }
+          MESSAGE ID     wa_MESSTAB-MSGID
+                  TYPE   wa_MESSTAB-MSGTYP
+                  NUMBER wa_MESSTAB-MSGNR
+                  INTO L_MSTRING
+                  WITH wa_MESSTAB-MSGV1
+                       wa_MESSTAB-MSGV2
+                       wa_MESSTAB-MSGV3
+                       wa_MESSTAB-MSGV4.
+          WRITE: / wa_MESSTAB-MSGTYP, L_MSTRING(250).
+        ENDLOOP.
+
+ endloop.
+*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+* Here we should copy code from that INCLUDE and also copy that structure for that code only . Then  all requred parameters pass to the workarea and insert to that intenal table
+* that internal table we pass to the BDC method of CALL TRANSACTION. so from that internal table , method will read by using t-code we mention in that
+
+FORM BDC_DYNPRO USING PROGRAM DYNPRO.                           " This code we copy from the INCLUDE program above define that  while created in Screeen recording
+  CLEAR wa_BDCDATA.
+  wa_BDCDATA-PROGRAM  = PROGRAM.
+  wa_BDCDATA-DYNPRO   = DYNPRO.
+  wa_BDCDATA-DYNBEGIN = 'X'.
+  APPEND wa_BDCDATA to it_bdcdata.
+ENDFORM.
+
+*        Insert field                                                  *
+
+
+FORM BDC_FIELD USING FNAM FVAL.                                " This code we copy from the INCLUDE program above define that  while created in Screeen recording
+    CLEAR wa_BDCDATA.
+    wa_BDCDATA-FNAM = FNAM.
+    wa_BDCDATA-FVAL = FVAL.
+    APPEND wa_BDCDATA to it_bdcdata.
+ENDFORM.
+
+*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
